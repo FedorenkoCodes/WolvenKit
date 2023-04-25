@@ -287,7 +287,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
         if (_globals.Value.ENABLE_NODE_EDITOR && cls is graphGraphResource or scnSceneResource)
         {
-            TabItemViewModels.Add(new RDTGraphViewModel2(cls, this));
+            TabItemViewModels.Add(new RDTGraphViewModel2(cls, this, _archiveManager));
         }
     }
 
