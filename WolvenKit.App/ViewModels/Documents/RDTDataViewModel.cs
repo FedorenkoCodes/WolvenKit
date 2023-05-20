@@ -8,10 +8,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Factories;
+using WolvenKit.App.Helpers;
 using WolvenKit.App.Models;
 using WolvenKit.App.Models.Nodify;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.Common.FNV1A;
 using WolvenKit.Core.Extensions;
 using WolvenKit.RED4.Archive;
@@ -33,6 +35,7 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     private List<ResourcePath> _nodePaths = new();
 
     private List<ChunkViewModel> _chunks = new();
+    private List<PropertyViewModel>? _properties;
 
 
     public RDTDataViewModel(IRedType data, RedDocumentViewModel parent, AppViewModel appViewModel,
@@ -68,8 +71,6 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
 
     #region properties
 
-    public IRedType GetData() => _data;
-
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
 
     public List<ChunkViewModel> Chunks
@@ -88,12 +89,34 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
         set => _chunks = value;
     }
 
-    public virtual ChunkViewModel GenerateChunks() => _chunkViewmodelFactory.ChunkViewModel(_data, this, _appViewModel/*, Parent.IsReadOnly*/);
+    public IRedType Data => _data;
+
+    public List<PropertyViewModel> Properties
+    {
+        get
+        {
+            if (_properties == null)
+            {
+                _properties = _data is null ? new() : new List<PropertyViewModel>
+                {
+                    PropertyViewModel.Create(_data)
+                };
+            }
+            return _properties;
+        }
+        set => _properties = value;
+    }
+
+    public virtual ChunkViewModel GenerateChunks() => _chunkViewmodelFactory.ChunkViewModel(_data, this, _appViewModel);
 
     [ObservableProperty]
     private bool _isEmbeddedFile;
 
-    [ObservableProperty] private object? _selectedChunk;
+    [ObservableProperty] private PropertyViewModel? _selectedProperty;
+
+    [ObservableProperty] private ObservableCollection<PropertyViewModel> _selectedProperties = new();
+
+    [ObservableProperty] private ChunkViewModel? _selectedChunk;
 
     [ObservableProperty] private object? _selectedChunks;
 
@@ -201,7 +224,7 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
                         LookForReferences(cvm, rbc2, xpath + "." + pi.RedName);
                     }
                 }
-                else if (prop is IRedArray ira)
+                else if (prop is IRedBaseArray ira)
                 {
                     var i = 0;
                     foreach (var item in ira)
