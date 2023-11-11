@@ -87,9 +87,9 @@
             x:Name="RedTreeView"
             Grid.Column="0"
             Margin="-1"
-            ItemsSource="{Binding Chunks}"
-            SelectedItem="{Binding SelectedChunk, Mode=TwoWay}"
-            SelectedItems="{Binding SelectedChunks, Mode=TwoWay}" />
+            SelectedItem="{Binding SelectedProperty, Mode=TwoWay}"
+            SelectedItems="{Binding SelectedProperties, Mode=TwoWay}"
+            Source="{Binding Data}" />
 
         <!--  Grid Splitter  -->
         <syncfusion:SfGridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
@@ -97,8 +97,8 @@
         <editors:RedTypeView
             x:Name="CustomPG"
             Grid.Column="2"
-            DataContext="{Binding SelectedChunk}"
-            ViewModel="{Binding SelectedChunk}" />
+            DataContext="{Binding SelectedChunk, IsAsync=True}"
+            ViewModel="{Binding SelectedChunk, IsAsync=True}" />
         <!--
             ViewModel="{Binding}"
         -->

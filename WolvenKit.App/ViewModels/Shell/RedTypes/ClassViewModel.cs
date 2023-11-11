@@ -47,7 +47,7 @@ public class ClassViewModel<T> : PropertyViewModel<T> where T : RedBaseClass
             Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), _data.GetProperty(propertyInfo.RedName)));
         }
 
-        foreach (var propertyInfo in typeInfo.DynamicPropertyInfos)
+        foreach (var propertyInfo in _data.GetDynamicProperties())
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 

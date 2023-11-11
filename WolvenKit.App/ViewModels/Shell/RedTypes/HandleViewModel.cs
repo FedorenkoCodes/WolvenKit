@@ -59,7 +59,7 @@ public class HandleViewModel : PropertyViewModel<IRedHandle>
             Properties.Add(Create(_chunkViewModel, new RedPropertyInfo(propertyInfo), val.GetProperty(propertyInfo.RedName)));
         }
 
-        foreach (var propertyInfo in typeInfo.DynamicPropertyInfos)
+        foreach (var propertyInfo in val.GetDynamicProperties())
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 

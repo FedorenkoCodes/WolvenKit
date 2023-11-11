@@ -160,14 +160,17 @@ namespace WolvenKit.Views.Tools
                     return true;
                 case true:
                 {
-                    if (target.Parent.Data is not IRedArray arr)
+                    if (target.Parent.Data is IRedArray)
                     {
-                        return false;
+                        return true;
                     }
 
-                    var arrayType = target.Parent.Data.GetType().GetGenericTypeDefinition();
+                    if (target.Parent.Data is IRedStatic sta && sta.Count < sta.MaxSize)
+                    {
+                        return true;
+                    }
 
-                    return arrayType == typeof(CArray<>) || (arrayType == typeof(CStatic<>) && arr.Count < arr.MaxSize);
+                    return false;
                 }
                 default:
                     return true;
