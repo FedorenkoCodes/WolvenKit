@@ -2,6 +2,7 @@
     x:Class="WolvenKit.Views.Templates.RedValueView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:redValueEditors="clr-namespace:WolvenKit.Views.RedValueEditors"
@@ -12,11 +13,21 @@
 
     <UserControl.Resources>
         <redValueEditors:RedValueEditorSelector x:Key="redValueEditorSelector">
+            <redValueEditors:RedValueEditorSelector.CBoolEditor>
+                <DataTemplate>
+                    <redValueEditors:CBoolEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.CBoolEditor>
             <redValueEditors:RedValueEditorSelector.CEnumEditor>
                 <DataTemplate>
                     <redValueEditors:CEnumEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.CEnumEditor>
+            <redValueEditors:RedValueEditorSelector.CNumberEditor>
+                <DataTemplate>
+                    <redValueEditors:CNumberEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.CNumberEditor>
             <redValueEditors:RedValueEditorSelector.CStringEditor>
                 <DataTemplate>
                     <redValueEditors:CStringValueEditor />
@@ -26,9 +37,19 @@
     </UserControl.Resources>
 
     <Grid>
-        <ListBox
+        <Syncfusion:SfDataGrid
             HorizontalContentAlignment="Stretch"
-            ItemTemplateSelector="{StaticResource redValueEditorSelector}"
-            ItemsSource="{Binding ElementName=uc, Path=ItemSource.Value}" />
+            AllowSorting="False"
+            AutoGenerateColumns="False"
+            ColumnSizer="AutoLastColumnFill"
+            HeaderRowHeight="0"
+            ItemsSource="{Binding ElementName=uc, Path=ItemSource.Value}"
+            RowHeight="30"
+            SelectionMode="None">
+            <Syncfusion:SfDataGrid.Columns>
+                <Syncfusion:GridTextColumn MappingName="PropertyName" />
+                <Syncfusion:GridTemplateColumn CellTemplateSelector="{StaticResource redValueEditorSelector}" />
+            </Syncfusion:SfDataGrid.Columns>
+        </Syncfusion:SfDataGrid>
     </Grid>
 </UserControl>

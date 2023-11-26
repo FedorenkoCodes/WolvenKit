@@ -217,10 +217,18 @@ public partial class RedTreeView2 : UserControl
         if (e.Key == Key.Enter)
         {
             SearchResults.Clear();
+
+            if (string.IsNullOrEmpty(SearchTextBox.Text))
+            {
+                return;
+            }
+
             foreach (var redTypeViewModel in FindItems(root[0], SearchTextBox.Text))
             {
                 SearchResults.Add(new SearchResult($"{{{BuildPath(redTypeViewModel)}}} {redTypeViewModel.DisplayValue}", redTypeViewModel));
             }
+
+            SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);
         }
     }
 

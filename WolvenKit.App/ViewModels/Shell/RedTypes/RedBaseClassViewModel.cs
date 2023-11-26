@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using WolvenKit.RED4.Types;
 
@@ -33,7 +34,7 @@ public class RedBaseClassViewModel<T> : RedTypeViewModel<T> where T : RedBaseCla
             return;
         }
 
-        foreach (var propertyInfo in _typeInfo.PropertyInfos)
+        foreach (var propertyInfo in _typeInfo.PropertyInfos.OrderBy(x => x.RedName))
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 

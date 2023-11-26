@@ -70,30 +70,49 @@
             </Syncfusion:SfTreeGrid.Columns>
         </Syncfusion:SfTreeGrid>
 
-        <Expander Grid.Row="2" Header="Search">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="200" />
-                </Grid.RowDefinitions>
+        <Expander
+            x:Name="SearchExpander"
+            Grid.Row="2"
+            ExpandDirection="Up">
+            <Expander.Header>
+                <Grid>
+                    <TextBox
+                        x:Name="SearchTextBox"
+                        HorizontalAlignment="{Binding HorizontalAlignment, RelativeSource={RelativeSource AncestorType=ContentPresenter}, Mode=OneWayToSource}"
+                        KeyUp="SearchTextBox_OnKeyUp" />
+                    <TextBlock
+                        Margin="10,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Foreground="DarkGray"
+                        IsHitTestVisible="False"
+                        Text="Enter Search Term Here">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
 
-                <TextBox
-                    x:Name="SearchTextBox"
-                    Grid.Row="0"
-                    KeyUp="SearchTextBox_OnKeyUp" />
-                <ListBox Grid.Row="1" ItemsSource="{Binding ElementName=uc, Path=SearchResults}">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <EventSetter Event="MouseDoubleClick" Handler="OnMouseDoubleClick" />
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+            </Expander.Header>
+            <ListBox Height="200" ItemsSource="{Binding ElementName=uc, Path=SearchResults}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <EventSetter Event="MouseDoubleClick" Handler="OnMouseDoubleClick" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Expander>
     </Grid>
 </UserControl>
