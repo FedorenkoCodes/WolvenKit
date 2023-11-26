@@ -12,6 +12,7 @@ using WolvenKit.App.Models;
 using WolvenKit.App.Models.Nodify;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.Common.FNV1A;
 using WolvenKit.Core.Extensions;
 using WolvenKit.RED4.Archive;
@@ -33,6 +34,8 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     private List<ResourcePath> _nodePaths = new();
 
     private List<ChunkViewModel> _chunks = new();
+
+    public IRedType Data => _data;
 
 
     public RDTDataViewModel(IRedType data, RedDocumentViewModel parent, AppViewModel appViewModel,
@@ -96,6 +99,11 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     [ObservableProperty] private object? _selectedChunk;
 
     [ObservableProperty] private object? _selectedChunks;
+
+
+    [ObservableProperty] private object? _selectedProperty;
+
+    [ObservableProperty] private ObservableCollection<object>? _selectedProperties;
 
 
     [ObservableProperty] private ChunkViewModel? _rootChunk;

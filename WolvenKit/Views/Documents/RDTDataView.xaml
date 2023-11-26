@@ -83,22 +83,21 @@
             </RowDefinition>
         </Grid.RowDefinitions>
 
-        <tools:RedTreeView
+        <tools:RedTreeView2
             x:Name="RedTreeView"
             Grid.Column="0"
             Margin="-1"
-            ItemsSource="{Binding Chunks}"
-            SelectedItem="{Binding SelectedChunk, Mode=TwoWay}"
-            SelectedItems="{Binding SelectedChunks, Mode=TwoWay}" />
+            ItemSource="{Binding Data}"
+            SelectedItem="{Binding SelectedProperty, Mode=OneWayToSource}"
+            SelectedItems="{Binding SelectedProperties, Mode=OneWayToSource}" />
 
         <!--  Grid Splitter  -->
         <syncfusion:SfGridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
 
-        <editors:RedTypeView
+        <templates:RedValueView
             x:Name="CustomPG"
             Grid.Column="2"
-            DataContext="{Binding SelectedChunk}"
-            ViewModel="{Binding SelectedChunk}" />
+            ItemSource="{Binding SelectedProperty}" />
         <!--
             ViewModel="{Binding}"
         -->
