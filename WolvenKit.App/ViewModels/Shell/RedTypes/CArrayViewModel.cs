@@ -1,9 +1,19 @@
-﻿using WolvenKit.RED4.Types;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using WolvenKit.App.ViewModels.Dialogs;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CArrayViewModel : RedTypeViewModel<IRedArray>
 {
+    internal AppViewModel AppViewModel { get; set; } = null!;
+    internal RedTypeHelper RedTypeHelper { get; set; } = null!;
+
     public CArrayViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
     {
     }
@@ -32,8 +42,72 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
             }
 
             entry.PropertyName = $"[{i}]";
+            entry.ArrayIndex = i;
 
             Properties.Add(entry);
+        }
+    }
+
+    protected internal override void SetValue(RedTypeViewModel value)
+    {
+        if (value.IsValueType)
+        {
+            _data![value.ArrayIndex] = value.DataObject;
+        }
+    }
+
+    public override IList<MenuItem> GetSupportedActions() =>
+        new List<MenuItem>
+        {
+            CreateMenuItem("New item", (sender, args) =>
+            {
+                if (RedPropertyInfo.InnerType!.IsAssignableTo(typeof(RedBaseClass)))
+                {
+                    AddClass();
+                }
+                else
+                {
+                    _data!.Add(RedTypeManager.CreateRedType(RedPropertyInfo.InnerType!));
+                }
+
+                FetchProperties();
+            }),
+            CreateMenuItem("Clear item(s)", (sender, args) =>
+            {
+                _data!.Clear();
+                FetchProperties();
+            })
+        };
+
+    private async void AddClass()
+    {
+        var existing = new ObservableCollection<string>(AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => RedPropertyInfo.InnerType!.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract).Select(x => x.Name));
+        if (existing.Count == 0)
+        {
+            throw new Exception();
+        }
+
+        if (existing.Count == 1)
+        {
+            _data!.Add(RedTypeManager.Create(existing[0]));
+            FetchProperties();
+        }
+
+        if (existing.Count > 1)
+        {
+            await AppViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+            {
+                DialogHandler = (model =>
+                {
+                    AppViewModel.CloseDialogCommand.Execute(null);
+                    if (model is CreateClassDialogViewModel createClassDialogViewModel &&
+                        !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
+                    {
+                        _data!.Add(RedTypeManager.Create(createClassDialogViewModel.SelectedClass));
+                        FetchProperties();
+                    }
+                })
+            });
         }
     }
 }

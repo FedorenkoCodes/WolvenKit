@@ -46,4 +46,14 @@ public class RedPropertyInfo
         }
         RedTypeName = RedReflection.GetRedTypeFromCSType(type);
     }
+
+    public Type GetFullType()
+    {
+        if (InnerType != null)
+        {
+            return BaseType.MakeGenericType(InnerType);
+        }
+
+        return BaseType;
+    }
 }

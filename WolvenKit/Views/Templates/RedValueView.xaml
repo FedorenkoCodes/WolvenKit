@@ -23,6 +23,16 @@
                     <redValueEditors:CEnumEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.CEnumEditor>
+            <redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
+                <DataTemplate>
+                    <redValueEditors:CKeyValuePairEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
+            <redValueEditors:RedValueEditorSelector.CNameEditor>
+                <DataTemplate>
+                    <redValueEditors:CNameEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.CNameEditor>
             <redValueEditors:RedValueEditorSelector.CNumberEditor>
                 <DataTemplate>
                     <redValueEditors:CNumberEditor />
@@ -33,6 +43,11 @@
                     <redValueEditors:CStringValueEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.CStringEditor>
+            <redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
+                <DataTemplate>
+                    <redValueEditors:ResourceReferenceEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
         </redValueEditors:RedValueEditorSelector>
     </UserControl.Resources>
 

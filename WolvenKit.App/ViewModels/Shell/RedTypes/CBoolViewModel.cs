@@ -12,7 +12,6 @@ public class CBoolViewModel : RedTypeViewModel<CBool>
 
     public CBoolViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CBool data) : base(parent, redPropertyInfo, data)
     {
-        UpdateDisplayValue();
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = _data ? "True" : "False";

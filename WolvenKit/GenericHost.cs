@@ -18,6 +18,7 @@ using WolvenKit.App.ViewModels.HomePage;
 using WolvenKit.App.ViewModels.HomePage.Pages;
 using WolvenKit.App.ViewModels.Importers;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Common;
 using WolvenKit.Common.Interfaces;
@@ -98,6 +99,8 @@ namespace WolvenKit
                     services.AddTransient<IChunkViewmodelFactory, ChunkViewmodelFactory>();             // IDocumentTabViewmodelFactory
                     services.AddTransient<IPaneViewModelFactory, PaneViewModelFactory>();               // IChunkViewmodelFactory
                     services.AddTransient<IDocumentViewmodelFactory, DocumentViewmodelFactory>();       //IDocumentTabViewmodelFactory, IPaneViewModelFactory, IChunkViewmodelFactory
+
+                    services.AddSingleton<RedTypeHelper>();
 
                     // register views
                     #region shell

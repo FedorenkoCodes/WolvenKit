@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -45,8 +48,10 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     public string DisplayDescription
     {
         get => _displayDescription;
-        protected set => SetField(ref _displayDescription, value);
+        set => SetField(ref _displayDescription, value);
     }
+
+    internal int ArrayIndex { get; set; } = -1;
 
     public bool IsValueType { get; }
 
@@ -80,6 +85,8 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     protected internal virtual void SetValue(RedTypeViewModel value) {}
 
+    public virtual IList<MenuItem> GetSupportedActions() => new List<MenuItem>();
+
     #region INotifyProperty
 
     public event PropertyChangingEventHandler? PropertyChanging;
@@ -95,6 +102,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
             UpdateDisplayValue();
 
             Parent?.SetValue(this);
+            Parent?.OnPropertyChanged(nameof(DataObject));
         }
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -111,6 +119,32 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         field = value;
         OnPropertyChanged(propertyName);
         return true;
+    }
+
+    protected MenuItem CreateMenuItem(string header, Action<object, RoutedEventArgs> onClick)
+    {
+        var menuItem = new MenuItem { Header = header };
+        menuItem.Click += (sender, args) => onClick(sender, args);
+        return menuItem;
+    }
+
+    protected RedTypeViewModel? GetPropertyFromPath(string path)
+    {
+        var parts = path.Split('.');
+
+        var result = this;
+        foreach (var part in parts)
+        {
+            var newResult = result.Properties.FirstOrDefault(x => x.PropertyName == part);
+            if (newResult == null)
+            {
+                return null;
+            }
+
+            result = newResult;
+        }
+
+        return result;
     }
 
     #endregion INotifyProperty

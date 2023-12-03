@@ -25,6 +25,7 @@
             x:Name="TreeView"
             Grid.Row="1"
             AllowResizingColumns="True"
+            AllowSorting="False"
             AutoExpandMode="RootNodesExpanded"
             AutoGenerateColumnsMode="None"
             Background="{StaticResource ContentBackground}"
@@ -35,6 +36,12 @@
             SelectedItem="{Binding ElementName=uc, Path=SelectedItem, Mode=OneWayToSource}"
             SelectedItems="{Binding ElementName=uc, Path=SelectedItems, Mode=OneWayToSource}"
             SelectionMode="Extended">
+            <Syncfusion:SfTreeGrid.ExpanderContextMenu>
+                <ContextMenu />
+            </Syncfusion:SfTreeGrid.ExpanderContextMenu>
+            <Syncfusion:SfTreeGrid.RecordContextMenu>
+                <ContextMenu />
+            </Syncfusion:SfTreeGrid.RecordContextMenu>
             <Syncfusion:SfTreeGrid.Columns>
                 <Syncfusion:TreeGridTextColumn HeaderText="Name" MappingName="PropertyName" />
                 <Syncfusion:TreeGridTemplateColumn HeaderText="ValueOrType">

@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
-public class RedBaseClassViewModel<T> : RedTypeViewModel<T> where T : RedBaseClass
+public interface IRedBaseClassViewModel
 {
+    internal RedTypeHelper RedTypeHelper { get; set; }
+}
+
+public class RedBaseClassViewModel<T> : RedTypeViewModel<T>, IRedBaseClassViewModel where T : RedBaseClass
+{
+    public RedTypeHelper RedTypeHelper { get; set; } = null!;
+
     protected ExtendedTypeInfo _typeInfo;
 
     public RedBaseClassViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, T? data) : base(parent, redPropertyInfo, data)

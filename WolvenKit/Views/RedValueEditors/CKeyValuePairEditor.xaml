@@ -1,0 +1,46 @@
+﻿<UserControl
+    x:Class="WolvenKit.Views.RedValueEditors.CKeyValuePairEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WolvenKit.Views.RedValueEditors"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <local:RedValueEditorSelector x:Key="redValueEditorSelector">
+            <local:RedValueEditorSelector.CBoolEditor>
+                <DataTemplate>
+                    <local:CBoolEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.CBoolEditor>
+            <local:RedValueEditorSelector.CEnumEditor>
+                <DataTemplate>
+                    <local:CEnumEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.CEnumEditor>
+            <local:RedValueEditorSelector.CNameEditor>
+                <DataTemplate>
+                    <local:CNameEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.CNameEditor>
+            <local:RedValueEditorSelector.CNumberEditor>
+                <DataTemplate>
+                    <local:CNumberEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.CNumberEditor>
+            <local:RedValueEditorSelector.CStringEditor>
+                <DataTemplate>
+                    <local:CStringValueEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.CStringEditor>
+            <local:RedValueEditorSelector.ResourceReferenceEditor>
+                <DataTemplate>
+                    <local:ResourceReferenceEditor />
+                </DataTemplate>
+            </local:RedValueEditorSelector.ResourceReferenceEditor>
+        </local:RedValueEditorSelector>
+    </UserControl.Resources>
+    <ContentControl ContentTemplateSelector="{StaticResource redValueEditorSelector}" />
+</UserControl>

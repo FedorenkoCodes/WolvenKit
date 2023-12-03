@@ -5,9 +5,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Splat;
 using Syncfusion.UI.Xaml.Grid;
 using Syncfusion.UI.Xaml.ScrollAxis;
 using Syncfusion.UI.Xaml.TreeGrid;
+using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Shell;
@@ -32,7 +34,7 @@ public partial class RedTreeView2 : UserControl
 
         if (view.ItemSource != null)
         {
-            view.SourceViewModel.Add(RedTypeHelper.Create(view.ItemSource));
+            view.SourceViewModel.Add(view._redTypeHelper.Create(view.ItemSource));
         }
     }
 
@@ -61,15 +63,41 @@ public partial class RedTreeView2 : UserControl
     }
 
     public ObservableCollection<RedTypeViewModel> SourceViewModel { get; } = new();
+    internal RedTypeHelper _redTypeHelper;
 
     public RedTreeView2()
     {
         InitializeComponent();
 
+        _redTypeHelper = Locator.Current.GetService<RedTypeHelper>();
+
         Navigator.SelectedItemChanged += Navigator_OnSelectedItemChanged;
         Navigator.TextPathChanged += Navigator_OnTextPathChanged;
 
         TreeView.SelectionChanged += TreeView_OnSelectionChanged;
+
+        TreeView.TreeGridContextMenuOpening += TreeView_OnTreeGridContextMenuOpening;
+    }
+
+    private void TreeView_OnTreeGridContextMenuOpening(object sender, TreeGridContextMenuEventArgs e)
+    {
+        if (SelectedItem is not RedTypeViewModel redTypeViewModel)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        e.ContextMenu.Items.Clear();
+
+        foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
+        {
+            e.ContextMenu.Items.Add(supportedAction);
+        }
+
+        if (e.ContextMenu.Items.Count == 0)
+        {
+            e.Handled = true;
+        }
     }
 
     private void Navigator_OnSelectedItemChanged(object sender, EventArgs e)
@@ -87,7 +115,7 @@ public partial class RedTreeView2 : UserControl
         var parts = e.Path.Split('\\');
 
         RedTypeViewModel item = null;
-        IList<RedTypeViewModel> items = new List<RedTypeViewModel> { RedTypeHelper.Create(ItemSource) };
+        IList<RedTypeViewModel> items = new List<RedTypeViewModel> { _redTypeHelper.Create(ItemSource) };
         foreach (var part in parts)
         {
             var prop = items.FirstOrDefault(x => x.PropertyName == part);

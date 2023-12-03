@@ -8,8 +8,11 @@ public class RedValueEditorSelector : DataTemplateSelector
 {
     public DataTemplate CBoolEditor { get; set; }
     public DataTemplate CEnumEditor { get; set; }
+    public DataTemplate CKeyValuePairEditor { get; set; }
+    public DataTemplate CNameEditor { get; set; }
     public DataTemplate CNumberEditor { get; set; }
     public DataTemplate CStringEditor { get; set; }
+    public DataTemplate ResourceReferenceEditor { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -23,14 +26,29 @@ public class RedValueEditorSelector : DataTemplateSelector
             return CEnumEditor;
         }
 
+        if (item is CKeyValuePairViewModel)
+        {
+            return CKeyValuePairEditor;
+        }
+
+        if (item is CNameViewModel)
+        {
+            return CNameEditor;
+        }
+
         if (item is CStringViewModel)
         {
             return CStringEditor;
         }
 
-        if (item is CUInt8ViewModel or CUInt16ViewModel or CUInt32ViewModel or CUInt64ViewModel)
+        if (item is INumberViewModel)
         {
             return CNumberEditor;
+        }
+
+        if (item is ResourceReferenceViewModel)
+        {
+            return ResourceReferenceEditor;
         }
 
         return base.SelectTemplate(item, container);
