@@ -53,12 +53,14 @@
 
     <Grid>
         <Syncfusion:SfDataGrid
+            x:Name="PropertyGrid"
             HorizontalContentAlignment="Stretch"
             AllowSorting="False"
             AutoGenerateColumns="False"
             ColumnSizer="AutoLastColumnFill"
             HeaderRowHeight="0"
             ItemsSource="{Binding ElementName=uc, Path=ItemSource.Value}"
+            QueryRowHeight="PropertyGrid_OnQueryRowHeight"
             RowHeight="30"
             SelectionMode="None">
             <Syncfusion:SfDataGrid.Columns>

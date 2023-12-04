@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using Syncfusion.UI.Xaml.Grid;
 using WolvenKit.App.ViewModels.Shell.RedTypes;
 
 namespace WolvenKit.Views.Templates
@@ -29,6 +30,16 @@ namespace WolvenKit.Views.Templates
         public RedValueView()
         {
             InitializeComponent();
+        }
+
+        private readonly GridRowSizingOptions _gridRowResizingOptions = new();
+
+        private void PropertyGrid_OnQueryRowHeight(object sender, QueryRowHeightEventArgs e)
+        {
+            PropertyGrid.GridColumnSizer.GetAutoRowHeight(e.RowIndex, _gridRowResizingOptions, out var autoHeight);
+
+            e.Height = autoHeight >= 30 ? autoHeight : 30;
+            e.Handled = true;
         }
     }
 }

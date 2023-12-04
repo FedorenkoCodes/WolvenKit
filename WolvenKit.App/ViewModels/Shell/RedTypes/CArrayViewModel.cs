@@ -16,6 +16,7 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
 
     public CArrayViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolArray";
     }
 
     protected internal override void FetchProperties()

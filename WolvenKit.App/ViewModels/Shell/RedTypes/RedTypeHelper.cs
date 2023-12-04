@@ -117,6 +117,10 @@ public class RedTypeHelper
         {
             result = new CDateTimeViewModel(parent, propertyInfo, (CDateTime)data!);
         }
+        else if (typeof(CRUID).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new CRUIDViewModel(parent, propertyInfo, (CRUID)data!);
+        }
 
         result ??= new DefaultPropertyViewModel(parent, propertyInfo, data);
 

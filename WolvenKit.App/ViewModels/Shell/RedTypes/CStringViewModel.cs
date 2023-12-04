@@ -12,6 +12,8 @@ public class CStringViewModel : RedTypeViewModel<CString>
 
     public CStringViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CString data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolString";
+
         DisplayValue = _data;
     }
 

@@ -16,6 +16,8 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 
     public CHandleViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedHandle? data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "References";
+
         var innerValue = data?.GetValue();
         if (innerValue != null)
         {

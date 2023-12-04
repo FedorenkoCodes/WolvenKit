@@ -12,6 +12,7 @@ public class CNameViewModel : RedTypeViewModel<CName>
 
     public CNameViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CName data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolString";
     }
 
     protected internal override void UpdateDisplayValue()

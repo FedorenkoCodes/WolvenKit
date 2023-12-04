@@ -27,6 +27,8 @@ public class CEnumViewModel : RedTypeViewModel<IRedEnum>
 
     public CEnumViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedEnum? data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolEnum";
+
         EnumValues = Enum.GetNames(redPropertyInfo.InnerType!);
         _selectedValue = EnumValues[0];
 

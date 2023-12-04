@@ -22,6 +22,7 @@ public class CUInt8ViewModel : RedTypeViewModel<CUInt8>, INumberViewModel
 
     public CUInt8ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CUInt8 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -41,6 +42,7 @@ public class CInt8ViewModel : RedTypeViewModel<CInt8>, INumberViewModel
 
     public CInt8ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CInt8 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -60,6 +62,7 @@ public class CUInt16ViewModel : RedTypeViewModel<CUInt16>, INumberViewModel
 
     public CUInt16ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CUInt16 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -79,6 +82,7 @@ public class CInt16ViewModel : RedTypeViewModel<CInt16>, INumberViewModel
 
     public CInt16ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CInt16 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -98,6 +102,7 @@ public class CUInt32ViewModel : RedTypeViewModel<CUInt32>, INumberViewModel
 
     public CUInt32ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CUInt32 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -117,6 +122,7 @@ public class CInt32ViewModel : RedTypeViewModel<CInt32>, INumberViewModel
 
     public CInt32ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CInt32 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -136,6 +142,7 @@ public class CUInt64ViewModel : RedTypeViewModel<CUInt64>, INumberViewModel
 
     public CUInt64ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CUInt64 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -155,6 +162,7 @@ public class CInt64ViewModel : RedTypeViewModel<CInt64>, INumberViewModel
 
     public CInt64ViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CInt64 data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString();
@@ -174,6 +182,7 @@ public class CFloatViewModel : RedTypeViewModel<CFloat>, INumberViewModel
 
     public CFloatViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CFloat data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString("G9", CultureInfo.InvariantCulture);
@@ -193,6 +202,7 @@ public class CDoubleViewModel : RedTypeViewModel<CDouble>, INumberViewModel
 
     public CDoubleViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CDouble data) : base(parent, redPropertyInfo, data)
     {
+        ExtensionIcon = "SymbolNumeric";
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = BindingValue.ToString("G17", CultureInfo.InvariantCulture);
