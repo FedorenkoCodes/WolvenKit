@@ -13,6 +13,7 @@ public class RedValueEditorSelector : DataTemplateSelector
     public DataTemplate CNumberEditor { get; set; }
     public DataTemplate CStringEditor { get; set; }
     public DataTemplate ResourceReferenceEditor { get; set; }
+    public DataTemplate CLegacySingleChannelCurveEditor { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -49,6 +50,11 @@ public class RedValueEditorSelector : DataTemplateSelector
         if (item is ResourceReferenceViewModel)
         {
             return ResourceReferenceEditor;
+        }
+
+        if (item is CLegacySingleChannelCurveViewModel)
+        {
+            return CLegacySingleChannelCurveEditor;
         }
 
         return base.SelectTemplate(item, container);

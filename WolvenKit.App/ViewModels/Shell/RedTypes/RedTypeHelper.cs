@@ -61,6 +61,11 @@ public class RedTypeHelper
         {
             result = new ResourceReferenceViewModel(parent, propertyInfo, (IRedRef?)data);
         }
+        else if (typeof(IRedLegacySingleChannelCurve).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new CLegacySingleChannelCurveViewModel(parent, propertyInfo, (IRedLegacySingleChannelCurve?)data);
+            ((CLegacySingleChannelCurveViewModel)result).RedTypeHelper = this;
+        }
         else if (typeof(CName).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CNameViewModel(parent, propertyInfo, (CName)data!);

@@ -48,6 +48,11 @@
                     <redValueEditors:ResourceReferenceEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
+            <redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
+                <DataTemplate>
+                    <redValueEditors:CLegacySingleChannelCurveEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
         </redValueEditors:RedValueEditorSelector>
     </UserControl.Resources>
 
@@ -64,6 +69,15 @@
             RowHeight="30"
             SelectionMode="None">
             <Syncfusion:SfDataGrid.Columns>
+                <Syncfusion:GridTemplateColumn>
+                    <Syncfusion:GridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Button />
+                            </Grid>
+                        </DataTemplate>
+                    </Syncfusion:GridTemplateColumn.CellTemplate>
+                </Syncfusion:GridTemplateColumn>
                 <Syncfusion:GridTextColumn MappingName="PropertyName" />
                 <Syncfusion:GridTemplateColumn CellTemplateSelector="{StaticResource redValueEditorSelector}" />
             </Syncfusion:SfDataGrid.Columns>

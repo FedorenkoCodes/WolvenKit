@@ -96,4 +96,14 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
             });
         }
     }
+
+    protected override void OnPropertyChanged(string? propertyName = null)
+    {
+        base.OnPropertyChanged(propertyName);
+
+        if (propertyName == nameof(IsExpanded) && Properties.Count == 1)
+        {
+            Properties[0].IsExpanded = IsExpanded;
+        }
+    }
 }

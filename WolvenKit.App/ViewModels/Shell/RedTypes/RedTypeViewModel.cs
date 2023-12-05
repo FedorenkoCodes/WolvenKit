@@ -12,6 +12,8 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropertyChanged, IDisposable
 {
+    protected bool _isExpanded;
+
     protected IRedType? _dataObject;
     protected string _propertyName = "";
     protected string _displayType = "";
@@ -20,6 +22,12 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public RedTypeViewModel? Parent { get; }
     public RedPropertyInfo RedPropertyInfo { get; }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetField(ref _isExpanded, value);
+    }
 
     public IRedType? DataObject
     {
@@ -145,6 +153,12 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         }
 
         return result;
+    }
+
+    public void Refresh()
+    {
+        FetchProperties();
+        UpdateDisplayValue();
     }
 
     #endregion INotifyProperty
