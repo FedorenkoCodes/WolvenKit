@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using WolvenKit.App.ViewModels.Documents;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
@@ -13,7 +14,9 @@ public class RedTypeHelper
 
     public RedTypeViewModel Create(IRedType data) => Create(null, new RedPropertyInfo(data), data);
 
-    public RedTypeViewModel Create(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data, bool fetchData = true)
+    public RedTypeViewModel Create(RDTDataViewModel parentDataContext, IRedType data) => Create(null, new RedPropertyInfo(data), data, parentDataContext);
+
+    public RedTypeViewModel Create(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data, RDTDataViewModel? parentDataContext = null, bool fetchData = true)
     {
         RedTypeViewModel? result = null;
 
@@ -33,11 +36,25 @@ public class RedTypeHelper
         {
             result = new RedBaseClassViewModel(parent, propertyInfo, (RedBaseClass?)data);
         }
+        else if (typeof(DataBuffer).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new DataBufferViewModel(parent, propertyInfo, (DataBuffer?)data);
+        }
+        else if (typeof(SharedDataBuffer).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new SharedDataBufferViewModel(parent, propertyInfo, (SharedDataBuffer?)data);
+            ((SharedDataBufferViewModel)result).RedTypeHelper = this;
+        }
         else if (typeof(IRedHandle).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CHandleViewModel(parent, propertyInfo, (IRedHandle?)data);
             ((CHandleViewModel)result).AppViewModel = _appViewModel;
             ((CHandleViewModel)result).RedTypeHelper = this;
+        }
+        else if (typeof(IRedWeakHandle).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new CWeakHandleViewModel(parent, propertyInfo, (IRedWeakHandle?)data);
+            ((CWeakHandleViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(IRedArray).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -73,6 +90,10 @@ public class RedTypeHelper
         else if (typeof(CString).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CStringViewModel(parent, propertyInfo, (CString)data!);
+        }
+        else if (typeof(TweakDBID).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new TweakDBIDViewModel(parent, propertyInfo, (TweakDBID)data!);
         }
         else if (typeof(CBool).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -133,6 +154,8 @@ public class RedTypeHelper
         {
             redBaseClassViewModel.RedTypeHelper = this;
         }
+
+        result.RootContext = parentDataContext;
 
         if (fetchData)
         {

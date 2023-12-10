@@ -19,7 +19,10 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <shell:Breadcrumb x:Name="Navigator" Grid.Row="0" />
+        <shell:Breadcrumb
+            x:Name="Navigator"
+            Grid.Row="0"
+            Visibility="{Binding ElementName=uc, Path=EnableBreadcrumb, Converter={StaticResource Boolean2VisibilityConverter}}" />
 
         <Syncfusion:SfTreeGrid
             x:Name="TreeView"
@@ -32,9 +35,9 @@
             ColumnSizer="Star"
             ExpandStateMappingName="IsExpanded"
             GridLinesVisibility="None"
-            ItemsSource="{Binding ElementName=uc, Path=SourceViewModel}"
-            SelectedItem="{Binding ElementName=uc, Path=SelectedItem, Mode=OneWayToSource}"
-            SelectedItems="{Binding ElementName=uc, Path=SelectedItems, Mode=OneWayToSource}"
+            ItemsSource="{Binding ElementName=uc, Path=ItemSource}"
+            SelectedItem="{Binding ElementName=uc, Path=SelectedItem, Mode=TwoWay}"
+            SelectedItems="{Binding ElementName=uc, Path=SelectedItems, Mode=TwoWay}"
             SelectionMode="Extended">
             <Syncfusion:SfTreeGrid.ExpanderContextMenu>
                 <ContextMenu />
@@ -80,7 +83,8 @@
         <Expander
             x:Name="SearchExpander"
             Grid.Row="2"
-            ExpandDirection="Up">
+            ExpandDirection="Up"
+            Visibility="{Binding ElementName=uc, Path=EnableSearch, Converter={StaticResource Boolean2VisibilityConverter}}">
             <Expander.Header>
                 <Grid>
                     <TextBox

@@ -87,9 +87,10 @@
             x:Name="RedTreeView"
             Grid.Column="0"
             Margin="-1"
-            ItemSource="{Binding Data}"
-            SelectedItem="{Binding SelectedProperty, Mode=OneWayToSource}"
-            SelectedItems="{Binding SelectedProperties, Mode=OneWayToSource}" />
+            ItemSource="{Binding Properties}"
+            SearchResults="{Binding SearchResults, Mode=TwoWay}"
+            SelectedItem="{Binding SelectedProperty, Mode=TwoWay}"
+            SelectedItems="{Binding SelectedProperties, Mode=TwoWay}" />
 
         <!--  Grid Splitter  -->
         <syncfusion:SfGridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />

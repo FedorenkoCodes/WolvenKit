@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,9 +10,9 @@ using Splat;
 using Syncfusion.UI.Xaml.Grid;
 using Syncfusion.UI.Xaml.ScrollAxis;
 using Syncfusion.UI.Xaml.TreeGrid;
-using WolvenKit.App.ViewModels.Shell;
+using Syncfusion.UI.Xaml.TreeGrid.Helpers;
+using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.Shell.RedTypes;
-using WolvenKit.RED4.Types;
 using WolvenKit.Views.Shell;
 
 namespace WolvenKit.Views.Tools;
@@ -20,32 +21,56 @@ namespace WolvenKit.Views.Tools;
 /// </summary>
 public partial class RedTreeView2 : UserControl
 {
-    public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register(
-        nameof(ItemSource), typeof(IRedType), typeof(RedTreeView2), new PropertyMetadata(null, OnItemSourceChanged));
+    public static readonly DependencyProperty EnableSearchProperty = DependencyProperty.Register(
+        nameof(EnableSearch), typeof(bool), typeof(RedTreeView2), new PropertyMetadata(true));
 
-    private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    public bool EnableSearch
+    {
+        get => (bool)GetValue(EnableSearchProperty);
+        set => SetValue(EnableSearchProperty, value);
+    }
+
+    public static readonly DependencyProperty EnableBreadcrumbProperty = DependencyProperty.Register(
+        nameof(EnableBreadcrumb), typeof(bool), typeof(RedTreeView2), new PropertyMetadata(true));
+
+    public bool EnableBreadcrumb
+    {
+        get => (bool)GetValue(EnableBreadcrumbProperty);
+        set => SetValue(EnableBreadcrumbProperty, value);
+    }
+
+    public static readonly DependencyProperty EnableDescriptionProperty = DependencyProperty.Register(
+        nameof(EnableDescription), typeof(bool), typeof(RedTreeView2), new PropertyMetadata(true));
+
+    public bool EnableDescription
+    {
+        get => (bool)GetValue(EnableDescriptionProperty);
+        set => SetValue(EnableDescriptionProperty, value);
+    }
+
+    public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register(
+        nameof(ItemSource), typeof(ObservableCollection<RedTypeViewModel>), typeof(RedTreeView2));
+
+    public ObservableCollection<RedTypeViewModel> ItemSource
+    {
+        get => (ObservableCollection<RedTypeViewModel>)GetValue(ItemSourceProperty);
+        set => SetValue(ItemSourceProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
+        nameof(SelectedItem), typeof(object), typeof(RedTreeView2), new PropertyMetadata(OnSelectedItemChanged));
+
+    private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not RedTreeView2 view)
         {
             return;
         }
 
-        view.SourceViewModel.Clear();
-
-        if (view.ItemSource != null)
-        {
-            view.SourceViewModel.Add(view._redTypeHelper.Create(view.ItemSource));
-        }
+        var rowIndex = view.TreeView.ResolveToRowIndex(view.SelectedItem);
+        var columnIndex = view.TreeView.GetLastColumnIndex();
+        view.TreeView.ScrollInView(new RowColumnIndex(rowIndex, columnIndex));
     }
-
-    public IRedType ItemSource
-    {
-        get => (IRedType)GetValue(ItemSourceProperty);
-        set => SetValue(ItemSourceProperty, value);
-    }
-
-    public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
-        nameof(SelectedItem), typeof(object), typeof(RedTreeView2));
 
     public object SelectedItem
     {
@@ -62,12 +87,23 @@ public partial class RedTreeView2 : UserControl
         set => SetValue(SelectedItemsProperty, value);
     }
 
-    public ObservableCollection<RedTypeViewModel> SourceViewModel { get; } = new();
+    public static readonly DependencyProperty SearchResultsProperty = DependencyProperty.Register(
+        nameof(SearchResults), typeof(ObservableCollection<SearchResult>), typeof(RedTreeView2));
+
+    public ObservableCollection<SearchResult> SearchResults
+    {
+        get => (ObservableCollection<SearchResult>)GetValue(SearchResultsProperty);
+        set => SetValue(SearchResultsProperty, value);
+    }
+
     internal RedTypeHelper _redTypeHelper;
 
     public RedTreeView2()
     {
         InitializeComponent();
+
+        SearchResults = new ObservableCollection<SearchResult>();
+        SearchResults.CollectionChanged += SearchResults_OnCollectionChanged;
 
         _redTypeHelper = Locator.Current.GetService<RedTypeHelper>();
 
@@ -78,6 +114,8 @@ public partial class RedTreeView2 : UserControl
 
         TreeView.TreeGridContextMenuOpening += TreeView_OnTreeGridContextMenuOpening;
     }
+
+    private void SearchResults_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);
 
     private void TreeView_OnTreeGridContextMenuOpening(object sender, TreeGridContextMenuEventArgs e)
     {
@@ -112,10 +150,15 @@ public partial class RedTreeView2 : UserControl
 
     private void Navigator_OnTextPathChanged(object sender, Breadcrumb.TextPathEventArgs e)
     {
+        if (DataContext is not RDTDataViewModel { Properties: { } root })
+        {
+            return;
+        }
+
         var parts = e.Path.Split('\\');
 
         RedTypeViewModel item = null;
-        IList<RedTypeViewModel> items = new List<RedTypeViewModel> { _redTypeHelper.Create(ItemSource) };
+        IList<RedTypeViewModel> items = root;
         foreach (var part in parts)
         {
             var prop = items.FirstOrDefault(x => x.PropertyName == part);
@@ -191,59 +234,33 @@ public partial class RedTreeView2 : UserControl
         }
     }
 
-    public ObservableCollection<SearchResult> SearchResults { get; } = new();
-
-    public record SearchResult(string Name, RedTypeViewModel Data);
-
     private IEnumerable<RedTypeViewModel> FindItems(RedTypeViewModel redTypeViewModel, string text)
     {
-        if (redTypeViewModel.PropertyName.Contains(text, StringComparison.InvariantCultureIgnoreCase))
+        foreach (var property in redTypeViewModel.GetAllProperties())
         {
-            yield return redTypeViewModel;
-        }
-
-        if (redTypeViewModel.DisplayValue.Contains(text, StringComparison.InvariantCultureIgnoreCase))
-        {
-            yield return redTypeViewModel;
-        }
-
-        if (redTypeViewModel.Properties.Count > 0)
-        {
-            foreach (var child in redTypeViewModel.Properties)
+            if (property.PropertyName.Contains(text, StringComparison.InvariantCultureIgnoreCase))
             {
-                foreach (var childProperty in FindItems(child, text))
-                {
-                    yield return childProperty;
-                }
+                yield return redTypeViewModel;
+            }
 
+            if (property.DisplayValue.Contains(text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                yield return redTypeViewModel;
             }
         }
     }
 
-    private string BuildPath(RedTypeViewModel redTypeViewModel)
-    {
-        var parts = new List<string>();
-
-        do
-        {
-            parts.Add(redTypeViewModel.PropertyName);
-            redTypeViewModel = redTypeViewModel.Parent;
-        } while (redTypeViewModel != null);
-
-        parts.Reverse();
-
-        return string.Join('\\', parts);
-    }
-
     private void SearchTextBox_OnKeyUp(object sender, KeyEventArgs e)
     {
-        if (SourceViewModel is not { } root)
-        {
-            return;
-        }
-
         if (e.Key == Key.Enter)
         {
+            if (DataContext is not RDTDataViewModel { Properties: { } root })
+            {
+                return;
+            }
+
+            SearchResults ??= new ObservableCollection<SearchResult>();
+
             SearchResults.Clear();
 
             if (string.IsNullOrEmpty(SearchTextBox.Text))
@@ -253,10 +270,8 @@ public partial class RedTreeView2 : UserControl
 
             foreach (var redTypeViewModel in FindItems(root[0], SearchTextBox.Text))
             {
-                SearchResults.Add(new SearchResult($"{{{BuildPath(redTypeViewModel)}}} {redTypeViewModel.DisplayValue}", redTypeViewModel));
+                SearchResults.Add(new SearchResult($"{{{redTypeViewModel.BuildXPath()}}} {redTypeViewModel.DisplayValue}", redTypeViewModel));
             }
-
-            SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);
         }
     }
 

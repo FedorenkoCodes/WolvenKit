@@ -6,7 +6,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.RED4.Types;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
@@ -22,6 +24,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public RedTypeViewModel? Parent { get; }
     public RedPropertyInfo RedPropertyInfo { get; }
+    public RDTDataViewModel? RootContext { get; set; }
 
     public bool IsExpanded
     {
@@ -95,6 +98,35 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public virtual IList<MenuItem> GetSupportedActions() => new List<MenuItem>();
 
+    public string BuildXPath()
+    {
+        var parts = new List<string>();
+
+        var redTypeViewModel = this;
+        do
+        {
+            parts.Add(redTypeViewModel.PropertyName);
+            redTypeViewModel = redTypeViewModel.Parent;
+        } while (redTypeViewModel != null);
+
+        parts.Reverse();
+
+        return string.Join('\\', parts);
+    }
+
+    public IEnumerable<RedTypeViewModel> GetAllProperties()
+    {
+        foreach (var child in Properties)
+        {
+            yield return child;
+
+            foreach (var childProperty in child.GetAllProperties())
+            {
+                yield return childProperty;
+            }
+        }
+    }
+
     #region INotifyProperty
 
     public event PropertyChangingEventHandler? PropertyChanging;
@@ -135,6 +167,8 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         menuItem.Click += (sender, args) => onClick(sender, args);
         return menuItem;
     }
+
+    protected RedTypeViewModel GetRootItem() => Parent != null ? Parent.GetRootItem() : this;
 
     protected RedTypeViewModel? GetPropertyFromPath(string path)
     {

@@ -6,6 +6,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Factories;
 using WolvenKit.App.Models;
@@ -26,6 +27,7 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     private readonly ISettingsManager _settingsManager;
     private readonly IGameControllerFactory _gameController;
     private readonly IChunkViewmodelFactory _chunkViewmodelFactory;
+    private readonly RedTypeHelper _redTypeHelper;
 
     private readonly AppViewModel _appViewModel;
 
@@ -47,8 +49,10 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
         _gameController = gameController;
         _chunkViewmodelFactory = chunkViewmodelFactory;
         _appViewModel = appViewModel;
+        _redTypeHelper = new RedTypeHelper(appViewModel);
 
         _data = data;
+        Properties.Add(_redTypeHelper.Create(this, _data));
         
         if (SelectedChunk == null && Chunks.Count > 0)
         {
@@ -101,9 +105,13 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     [ObservableProperty] private object? _selectedChunks;
 
 
+    [ObservableProperty] private ObservableCollection<RedTypeViewModel> _properties = new();
+
     [ObservableProperty] private object? _selectedProperty;
 
     [ObservableProperty] private ObservableCollection<object>? _selectedProperties;
+
+    [ObservableProperty] private ObservableCollection<SearchResult>? _searchResults;
 
 
     [ObservableProperty] private ChunkViewModel? _rootChunk;

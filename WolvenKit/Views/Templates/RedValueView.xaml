@@ -43,6 +43,11 @@
                     <redValueEditors:CStringValueEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.CStringEditor>
+            <redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
+                <DataTemplate>
+                    <redValueEditors:TweakDBIDEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
             <redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
                 <DataTemplate>
                     <redValueEditors:ResourceReferenceEditor />

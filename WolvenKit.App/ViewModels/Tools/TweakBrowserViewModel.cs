@@ -20,6 +20,7 @@ using WolvenKit.App.Helpers;
 using WolvenKit.App.Models;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
@@ -50,6 +51,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
     private readonly ILoggerService _loggerService;
     private readonly ITweakDBService _tweakDB;
     private readonly ILocKeyService _locKeyService;
+    private readonly RedTypeHelper _redTypeHelper;
 
     public string Extension { get; set; } = "tweak";
 
@@ -87,6 +89,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
         _loggerService = loggerService;
         _tweakDB = tweakDbService;
         _locKeyService = locKeyService;
+        _redTypeHelper = new RedTypeHelper(_appViewModel);
         _tweakDB.Loaded += Load;
 
         PropertyChanged += InternalPropertyChanged;
@@ -108,7 +111,8 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 SelectedRecord.Clear();
                 if (SelectedRecordEntry != null && _tweakDB.IsLoaded)
                 {
-                    var vm = _chunkViewmodelFactory.ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, _appViewModel, null, true);
+                    var vm = _redTypeHelper.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull());
+                    //var vm = _chunkViewmodelFactory.ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, _appViewModel, null, true);
                     vm.IsExpanded = true;
                     SelectedRecord.Add(vm);
                 }
@@ -122,7 +126,14 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 {
                     var flat = TweakDBService.GetFlat(SelectedFlatEntry.Item);
                     ArgumentNullException.ThrowIfNull(flat);
-                    SelectedFlat = _chunkViewmodelFactory.ChunkViewModel(flat, flat.GetType().Name, _appViewModel);
+
+                    var selectedFlat = _redTypeHelper.Create(flat);
+                    if (selectedFlat is CArrayViewModel cArrayViewModel)
+                    {
+                        cArrayViewModel.ShowProperties = true;
+                    }
+
+                    SelectedFlat = selectedFlat;
                 }
                 else
                 {
@@ -142,7 +153,13 @@ public partial class TweakBrowserViewModel : ToolViewModel
                         arr.Add(query);
                     }
 
-                    SelectedQuery = _chunkViewmodelFactory.ChunkViewModel(arr, nameof(CArray<TweakDBID>), _appViewModel);
+                    var selectedQuery = _redTypeHelper.Create(arr);
+                    if (selectedQuery is CArrayViewModel cArrayViewModel)
+                    {
+                        cArrayViewModel.ShowProperties = true;
+                    }
+
+                    SelectedQuery = selectedQuery;
                 }
                 else
                 {
@@ -159,7 +176,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var u = TweakDBService.GetGroupTag(SelectedGroupTagEntry.Item);
                     if (u is not null)
                     {
-                        SelectedGroupTag = _chunkViewmodelFactory.ChunkViewModel((CUInt8)u, nameof(CUInt8), _appViewModel);
+                        SelectedGroupTag = _redTypeHelper.Create((CUInt8)u);
                     }
                 }
                 else
@@ -193,10 +210,10 @@ public partial class TweakBrowserViewModel : ToolViewModel
     public string QueriesHeader => $"Queries ({Queries.Cast<object>().Count()})";
     public string GroupTagsHeader => $"GroupTags ({GroupTags.Cast<object>().Count()})";
 
-    public ObservableCollection<ChunkViewModel> SelectedRecord { get; set; } = new();
-    [ObservableProperty] private ChunkViewModel? _selectedFlat;
-    [ObservableProperty] private ChunkViewModel? _selectedQuery;
-    [ObservableProperty] private ChunkViewModel? _selectedGroupTag;
+    public ObservableCollection<RedTypeViewModel> SelectedRecord { get; set; } = new();
+    [ObservableProperty] private RedTypeViewModel? _selectedFlat;
+    [ObservableProperty] private RedTypeViewModel? _selectedQuery;
+    [ObservableProperty] private RedTypeViewModel? _selectedGroupTag;
 
     #endregion
 

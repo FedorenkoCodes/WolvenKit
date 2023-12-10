@@ -12,6 +12,7 @@ public class RedValueEditorSelector : DataTemplateSelector
     public DataTemplate CNameEditor { get; set; }
     public DataTemplate CNumberEditor { get; set; }
     public DataTemplate CStringEditor { get; set; }
+    public DataTemplate TweakDBIDEditor { get; set; }
     public DataTemplate ResourceReferenceEditor { get; set; }
     public DataTemplate CLegacySingleChannelCurveEditor { get; set; }
 
@@ -40,6 +41,11 @@ public class RedValueEditorSelector : DataTemplateSelector
         if (item is CStringViewModel)
         {
             return CStringEditor;
+        }
+
+        if (item is TweakDBIDViewModel)
+        {
+            return TweakDBIDEditor;
         }
 
         if (item is INumberViewModel)

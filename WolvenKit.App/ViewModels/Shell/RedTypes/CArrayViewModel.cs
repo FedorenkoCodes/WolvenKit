@@ -14,6 +14,8 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
     internal AppViewModel AppViewModel { get; set; } = null!;
     internal RedTypeHelper RedTypeHelper { get; set; } = null!;
 
+    public bool ShowProperties { get; set; } = false;
+
     public CArrayViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
     {
         ExtensionIcon = "SymbolArray";
@@ -47,6 +49,15 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
 
             Properties.Add(entry);
         }
+    }
+
+    protected internal override object GetValue()
+    {
+        if (ShowProperties)
+        {
+            return Properties;
+        }
+        return base.GetValue();
     }
 
     protected internal override void SetValue(RedTypeViewModel value)

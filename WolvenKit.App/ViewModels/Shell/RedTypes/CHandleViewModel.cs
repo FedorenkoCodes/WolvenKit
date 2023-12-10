@@ -48,6 +48,8 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         }
         else
         {
+            actions.Add(CreateMenuItem("Find all references", (sender, args) => FindAllReferences()));
+
             actions.Add(CreateMenuItem("Replace class", (sender, args) => SetClass()));
 
             actions.Add(CreateMenuItem("Clear", (sender, args) =>
@@ -58,6 +60,38 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         }
 
         return actions;
+    }
+
+    private void FindAllReferences()
+    {
+        var rootItem = GetRootItem();
+
+        if (rootItem.RootContext is not { } rootContext)
+        {
+            return;
+        }
+
+        rootContext.SearchResults ??= new ObservableCollection<SearchResult>();
+
+        rootContext.SearchResults.Clear();
+        foreach (var property in rootItem.GetAllProperties())
+        {
+            if (property is CHandleViewModel { DataObject: IRedHandle handle })
+            {
+                if (ReferenceEquals(handle.GetValue(), _data!.GetValue()))
+                {
+                    rootContext.SearchResults.Add(new SearchResult($"{{{property.BuildXPath()}}}", property));
+                }
+            }
+
+            if (property is CWeakHandleViewModel { DataObject: IRedWeakHandle weakHandle })
+            {
+                if (ReferenceEquals(weakHandle.GetValue(), _data!.GetValue()))
+                {
+                    rootContext.SearchResults.Add(new SearchResult($"{{{property.BuildXPath()}}}", property));
+                }
+            }
+        }
     }
 
     private async void SetClass()
