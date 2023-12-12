@@ -105,7 +105,22 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     protected internal virtual void SetValue(RedTypeViewModel value) {}
 
-    public virtual IList<MenuItem> GetSupportedActions() => new List<MenuItem>();
+    public virtual IList<MenuItem> GetSupportedActions()
+    {
+        var result = new List<MenuItem>();
+
+        if (Parent is CArrayViewModel cArrayViewModel)
+        {
+            result.Add(CreateMenuItem("Remove item", RemoveItem_OnClick));
+
+            void RemoveItem_OnClick(object sender, RoutedEventArgs routedEventArgs)
+            {
+                cArrayViewModel.RemoveItem(this);
+            }
+        }
+        
+        return result;
+    }
 
     public string BuildXPath()
     {

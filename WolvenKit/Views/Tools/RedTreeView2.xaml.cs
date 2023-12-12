@@ -117,9 +117,38 @@ public partial class RedTreeView2 : UserControl
 
     private void SearchResults_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);
 
+    private bool HasSameParent()
+    {
+        var sameParent = true;
+
+        RedTypeViewModel parent = null;
+        foreach (var item in SelectedItems)
+        {
+            if (item is not RedTypeViewModel redTypeViewModel || redTypeViewModel.Parent == null)
+            {
+                sameParent = false;
+                break;
+            }
+
+            if (parent == null)
+            {
+                parent = redTypeViewModel.Parent;
+                continue;
+            }
+
+            if (!ReferenceEquals(parent, redTypeViewModel.Parent))
+            {
+                sameParent = false;
+                break;
+            }
+        }
+
+        return sameParent;
+    }
+
     private void TreeView_OnTreeGridContextMenuOpening(object sender, TreeGridContextMenuEventArgs e)
     {
-        if (SelectedItem is not RedTypeViewModel redTypeViewModel)
+        if (SelectedItems.Count == 0)
         {
             e.Handled = true;
             return;
@@ -127,9 +156,22 @@ public partial class RedTreeView2 : UserControl
 
         e.ContextMenu.Items.Clear();
 
-        foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
+        var redTypeViewModel = (RedTypeViewModel)SelectedItems[0];
+
+        if (SelectedItems.Count == 1)
         {
-            e.ContextMenu.Items.Add(supportedAction);
+            foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
+            {
+                e.ContextMenu.Items.Add(supportedAction);
+            }
+        }
+
+        if (SelectedItems.Count > 1 && redTypeViewModel.Parent is IMultiActionSupport multiActionSupport)
+        {
+            foreach (var supportedMultiAction in multiActionSupport.GetSupportedMultiActions(SelectedItems))
+            {
+                e.ContextMenu.Items.Add(supportedMultiAction);
+            }
         }
 
         if (e.ContextMenu.Items.Count == 0)

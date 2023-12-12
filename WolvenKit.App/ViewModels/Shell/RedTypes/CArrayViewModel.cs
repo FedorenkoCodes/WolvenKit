@@ -9,7 +9,7 @@ using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
-public class CArrayViewModel : RedTypeViewModel<IRedArray>
+public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 {
     internal AppViewModel AppViewModel { get; set; } = null!;
     internal RedTypeHelper RedTypeHelper { get; set; } = null!;
@@ -69,6 +69,23 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
         }
     }
 
+    public IList<MenuItem> GetSupportedMultiActions(IList<object> selectedItems)
+    {
+        return new List<MenuItem>
+        {
+            CreateMenuItem("Remove items", (sender, args) => { RemoveItems_OnClick(selectedItems); })
+        };
+    }
+
+    private void RemoveItems_OnClick(IList<object> selectedItems)
+    {
+        foreach (var redTypeViewModel in selectedItems.Cast<RedTypeViewModel>().OrderByDescending(x => x.ArrayIndex))
+        {
+            _data!.RemoveAt(redTypeViewModel.ArrayIndex);
+        }
+        FetchProperties();
+    }
+
     public override IList<MenuItem> GetSupportedActions() =>
         new List<MenuItem>
         {
@@ -122,5 +139,11 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
                 })
             });
         }
+    }
+
+    public void RemoveItem(RedTypeViewModel redTypeViewModel)
+    {
+        _data!.RemoveAt(redTypeViewModel.ArrayIndex);
+        FetchProperties();
     }
 }
