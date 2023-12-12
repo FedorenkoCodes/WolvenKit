@@ -15,6 +15,7 @@ public class RedValueEditorSelector : DataTemplateSelector
     public DataTemplate TweakDBIDEditor { get; set; }
     public DataTemplate ResourceReferenceEditor { get; set; }
     public DataTemplate CLegacySingleChannelCurveEditor { get; set; }
+    public DataTemplate gamedataLocKeyWrapperEditor { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -61,6 +62,11 @@ public class RedValueEditorSelector : DataTemplateSelector
         if (item is CLegacySingleChannelCurveViewModel)
         {
             return CLegacySingleChannelCurveEditor;
+        }
+
+        if (item is gamedataLocKeyWrapperViewModel)
+        {
+            return gamedataLocKeyWrapperEditor;
         }
 
         return base.SelectTemplate(item, container);

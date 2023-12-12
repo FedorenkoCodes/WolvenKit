@@ -58,12 +58,34 @@
                     <redValueEditors:CLegacySingleChannelCurveEditor />
                 </DataTemplate>
             </redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
+            <redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
+                <DataTemplate>
+                    <redValueEditors:gamedataLocKeyWrapperEditor />
+                </DataTemplate>
+            </redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
         </redValueEditors:RedValueEditorSelector>
     </UserControl.Resources>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            VerticalAlignment="Center"
+            FontWeight="SemiBold"
+            Text="{Binding ElementName=uc, Path=ItemSource.XPath}" />
+        <TextBlock
+            Grid.Row="1"
+            VerticalAlignment="Center"
+            Foreground="{StaticResource WolvenKitTan}"
+            Text="{Binding ElementName=uc, Path=ItemSource.DisplayType}" />
         <Syncfusion:SfDataGrid
             x:Name="PropertyGrid"
+            Grid.Row="2"
             HorizontalContentAlignment="Stretch"
             AllowSorting="False"
             AutoGenerateColumns="False"

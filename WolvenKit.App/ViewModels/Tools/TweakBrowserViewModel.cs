@@ -114,6 +114,8 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var vm = _redTypeHelper.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull());
                     //var vm = _chunkViewmodelFactory.ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, _appViewModel, null, true);
                     vm.IsExpanded = true;
+                    vm.IsReadOnly = true;
+
                     SelectedRecord.Add(vm);
                 }
                 OnPropertyChanged(nameof(SelectedRecord));
@@ -128,11 +130,12 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     ArgumentNullException.ThrowIfNull(flat);
 
                     var selectedFlat = _redTypeHelper.Create(flat);
+                    selectedFlat.IsReadOnly = true;
                     if (selectedFlat is CArrayViewModel cArrayViewModel)
                     {
                         cArrayViewModel.ShowProperties = true;
                     }
-
+                    
                     SelectedFlat = selectedFlat;
                 }
                 else
@@ -154,6 +157,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     }
 
                     var selectedQuery = _redTypeHelper.Create(arr);
+                    selectedQuery.IsReadOnly = true;
                     if (selectedQuery is CArrayViewModel cArrayViewModel)
                     {
                         cArrayViewModel.ShowProperties = true;
@@ -176,7 +180,10 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var u = TweakDBService.GetGroupTag(SelectedGroupTagEntry.Item);
                     if (u is not null)
                     {
-                        SelectedGroupTag = _redTypeHelper.Create((CUInt8)u);
+                        var selectedGroupTag = _redTypeHelper.Create((CUInt8)u);
+                        selectedGroupTag.IsReadOnly = true;
+
+                        SelectedGroupTag = selectedGroupTag;
                     }
                 }
                 else

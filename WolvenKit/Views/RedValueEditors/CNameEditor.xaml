@@ -10,5 +10,8 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <TextBox Width="Auto" Text="{Binding BindingValue}" />
+    <TextBox
+        Width="Auto"
+        IsReadOnly="{Binding IsReadOnly, Mode=OneWay}"
+        Text="{Binding BindingValue}" />
 </UserControl>

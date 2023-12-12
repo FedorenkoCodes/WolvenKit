@@ -10,5 +10,8 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <ComboBox ItemsSource="{Binding EnumValues}" SelectedItem="{Binding SelectedValue}" />
+    <ComboBox
+        IsReadOnly="{Binding IsReadOnly, Mode=OneWay}"
+        ItemsSource="{Binding EnumValues}"
+        SelectedItem="{Binding SelectedValue}" />
 </UserControl>

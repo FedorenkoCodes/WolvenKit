@@ -18,9 +18,11 @@
 
         <TextBox
             Grid.Row="0"
+            IsReadOnly="{Binding IsReadOnly, Mode=OneWay}"
             Text="{Binding BindingPath}" />
         <ComboBox
             Grid.Row="1"
+            IsReadOnly="{Binding IsReadOnly, Mode=OneWay}"
             ItemsSource="{Binding EnumValues}"
             SelectedItem="{Binding BindingFlag}" />
     </Grid>

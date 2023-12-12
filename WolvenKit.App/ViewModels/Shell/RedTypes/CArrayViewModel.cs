@@ -46,6 +46,7 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>
 
             entry.PropertyName = $"[{i}]";
             entry.ArrayIndex = i;
+            entry.IsReadOnly = IsReadOnly;
 
             Properties.Add(entry);
         }

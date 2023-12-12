@@ -44,6 +44,8 @@ public class CDictionaryViewModel : CArrayViewModel
 
             entry.ArrayIndex = i;
             entry.RedTypeHelper = RedTypeHelper;
+            entry.IsReadOnly = IsReadOnly;
+
             entry.FetchProperties();
 
             Properties.Add(entry);

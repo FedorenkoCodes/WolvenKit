@@ -45,6 +45,10 @@ public class RedTypeHelper
             result = new SharedDataBufferViewModel(parent, propertyInfo, (SharedDataBuffer?)data);
             ((SharedDataBufferViewModel)result).RedTypeHelper = this;
         }
+        else if (typeof(gamedataLocKeyWrapper).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new gamedataLocKeyWrapperViewModel(parent, propertyInfo, (gamedataLocKeyWrapper?)data);
+        }
         else if (typeof(IRedHandle).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CHandleViewModel(parent, propertyInfo, (IRedHandle?)data);

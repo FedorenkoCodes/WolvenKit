@@ -15,6 +15,7 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropertyChanged, IDisposable
 {
     protected bool _isExpanded;
+    protected bool _isReadOnly;
 
     protected IRedType? _dataObject;
     protected string _propertyName = "";
@@ -30,6 +31,12 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     {
         get => _isExpanded;
         set => SetField(ref _isExpanded, value);
+    }
+
+    public bool IsReadOnly
+    {
+        get => _isReadOnly;
+        set => SetField(ref _isReadOnly, value);
     }
 
     public IRedType? DataObject
@@ -61,6 +68,8 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         get => _displayDescription;
         set => SetField(ref _displayDescription, value);
     }
+
+    public string XPath => BuildXPath();
 
     internal int ArrayIndex { get; set; } = -1;
 
