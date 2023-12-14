@@ -36,6 +36,7 @@
             ExpandStateMappingName="IsExpanded"
             GridLinesVisibility="None"
             ItemsSource="{Binding ElementName=uc, Path=ItemSource}"
+            NavigationMode="Row"
             SelectedItem="{Binding ElementName=uc, Path=SelectedItem, Mode=TwoWay}"
             SelectedItems="{Binding ElementName=uc, Path=SelectedItems, Mode=TwoWay}"
             SelectionMode="Extended">

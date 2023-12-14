@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -50,6 +51,30 @@ public partial class RedTreeView2 : UserControl
 
     public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register(
         nameof(ItemSource), typeof(ObservableCollection<RedTypeViewModel>), typeof(RedTreeView2));
+
+    private static void TreeGridViewOnCurrentChanging(object sender, CurrentChangingEventArgs e)
+    {
+    }
+
+    private static void TreeGridViewOnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+    }
+
+    private static void TreeGridViewOnRecordPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+    }
+
+    private static void TreeGridViewOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+    }
+
+    private static void TreeGridViewOnNodeCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+    }
+
+    private static void TreeGridViewOnCurrentChanged(object sender, EventArgs e)
+    {
+    }
 
     public ObservableCollection<RedTypeViewModel> ItemSource
     {
@@ -113,6 +138,20 @@ public partial class RedTreeView2 : UserControl
         TreeView.SelectionChanged += TreeView_OnSelectionChanged;
 
         TreeView.TreeGridContextMenuOpening += TreeView_OnTreeGridContextMenuOpening;
+
+        TreeView.SelectionController = new GridSelectionControllerExt(TreeView);
+
+        TreeView.Loaded += TreeViewOnLoaded;
+    }
+
+    private void TreeViewOnLoaded(object sender, RoutedEventArgs e)
+    {
+        TreeView.View.CurrentChanged += TreeGridViewOnCurrentChanged;
+        TreeView.View.NodeCollectionChanged += TreeGridViewOnNodeCollectionChanged;
+        TreeView.View.PropertyChanged += TreeGridViewOnPropertyChanged;
+        TreeView.View.RecordPropertyChanged += TreeGridViewOnRecordPropertyChanged;
+        TreeView.View.SourceCollectionChanged += TreeGridViewOnSourceCollectionChanged;
+        TreeView.View.CurrentChanging += TreeGridViewOnCurrentChanging;
     }
 
     private void SearchResults_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);
@@ -282,12 +321,12 @@ public partial class RedTreeView2 : UserControl
         {
             if (property.PropertyName.Contains(text, StringComparison.InvariantCultureIgnoreCase))
             {
-                yield return redTypeViewModel;
+                yield return property;
             }
 
             if (property.DisplayValue.Contains(text, StringComparison.InvariantCultureIgnoreCase))
             {
-                yield return redTypeViewModel;
+                yield return property;
             }
         }
     }
@@ -325,5 +364,52 @@ public partial class RedTreeView2 : UserControl
         }
 
         SelectTreeItem(result.Data);
+    }
+
+    public class GridSelectionControllerExt : TreeGridRowSelectionController
+    {
+
+        public GridSelectionControllerExt(SfTreeGrid treeGrid) : base(treeGrid)
+        {
+        }
+
+        protected override void ProcessKeyDown(KeyEventArgs args)
+        {
+            if (args.Key == Key.Left)
+            {
+                if (TreeGrid.SelectedItem is RedTypeViewModel redTypeViewModel)
+                {
+                    if (redTypeViewModel.IsExpanded)
+                    {
+                        redTypeViewModel.IsExpanded = false;
+                        return;
+                    }
+
+                    if (redTypeViewModel.Parent != null)
+                    {
+                        TreeGrid.SetCurrentValue(SfGridBase.SelectedItemProperty, redTypeViewModel.Parent);
+                        return;
+                    }
+                }
+            }
+
+            if (args.Key == Key.Right)
+            {
+                if (TreeGrid.SelectedItem is RedTypeViewModel redTypeViewModel)
+                {
+                    if (redTypeViewModel.Properties.Count > 0)
+                    {
+                        redTypeViewModel.IsExpanded = true;
+                    }
+                }
+            }
+
+            base.ProcessKeyDown(args);
+        }
+
+        protected override void ProcessSelectedItemChanged(SelectionPropertyChangedHandlerArgs handle)
+        {
+            base.ProcessSelectedItemChanged(handle);
+        }
     }
 }

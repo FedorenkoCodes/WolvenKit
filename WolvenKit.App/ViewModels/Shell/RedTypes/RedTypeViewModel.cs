@@ -71,7 +71,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public string XPath => BuildXPath();
 
-    internal int ArrayIndex { get; set; } = -1;
+    public int ArrayIndex { get; internal set; } = -1;
 
     public bool IsValueType { get; }
 
@@ -79,7 +79,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public string ExtensionIcon { get; set; } = "SymbolClass";
 
-    public ObservableCollection<RedTypeViewModel> Properties { get; } = new();
+    public ObservableCollection<RedTypeViewModel> Properties { get; protected set; } = new();
 
     public RedTypeViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedType? data)
     {
@@ -193,6 +193,20 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     }
 
     protected RedTypeViewModel GetRootItem() => Parent != null ? Parent.GetRootItem() : this;
+
+    protected void Select(RedTypeViewModel? selection = null)
+    {
+        var context = GetRootItem().RootContext;
+
+        if (context != null && context.SelectedProperties != null)
+        {
+            selection ??= this;
+
+            context.SelectedProperty = selection;
+            context.SelectedProperties.Clear();
+            context.SelectedProperties.Add(selection);
+        }
+    }
 
     protected RedTypeViewModel? GetPropertyFromPath(string path)
     {

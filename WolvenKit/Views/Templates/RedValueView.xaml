@@ -10,63 +10,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-
-    <UserControl.Resources>
-        <redValueEditors:RedValueEditorSelector x:Key="redValueEditorSelector">
-            <redValueEditors:RedValueEditorSelector.CBoolEditor>
-                <DataTemplate>
-                    <redValueEditors:CBoolEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CBoolEditor>
-            <redValueEditors:RedValueEditorSelector.CEnumEditor>
-                <DataTemplate>
-                    <redValueEditors:CEnumEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CEnumEditor>
-            <redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
-                <DataTemplate>
-                    <redValueEditors:CKeyValuePairEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
-            <redValueEditors:RedValueEditorSelector.CNameEditor>
-                <DataTemplate>
-                    <redValueEditors:CNameEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CNameEditor>
-            <redValueEditors:RedValueEditorSelector.CNumberEditor>
-                <DataTemplate>
-                    <redValueEditors:CNumberEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CNumberEditor>
-            <redValueEditors:RedValueEditorSelector.CStringEditor>
-                <DataTemplate>
-                    <redValueEditors:CStringValueEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CStringEditor>
-            <redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
-                <DataTemplate>
-                    <redValueEditors:TweakDBIDEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
-            <redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
-                <DataTemplate>
-                    <redValueEditors:ResourceReferenceEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
-            <redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
-                <DataTemplate>
-                    <redValueEditors:CLegacySingleChannelCurveEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
-            <redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
-                <DataTemplate>
-                    <redValueEditors:gamedataLocKeyWrapperEditor />
-                </DataTemplate>
-            </redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
-        </redValueEditors:RedValueEditorSelector>
-    </UserControl.Resources>
-
-    <Grid>
+    <Grid Background="{StaticResource ContentBackground}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -83,31 +27,14 @@
             VerticalAlignment="Center"
             Foreground="{StaticResource WolvenKitTan}"
             Text="{Binding ElementName=uc, Path=ItemSource.DisplayType}" />
-        <Syncfusion:SfDataGrid
-            x:Name="PropertyGrid"
+        <Border
             Grid.Row="2"
-            HorizontalContentAlignment="Stretch"
-            AllowSorting="False"
-            AutoGenerateColumns="False"
-            ColumnSizer="AutoLastColumnFill"
-            HeaderRowHeight="0"
-            ItemsSource="{Binding ElementName=uc, Path=ItemSource.Value}"
-            QueryRowHeight="PropertyGrid_OnQueryRowHeight"
-            RowHeight="30"
-            SelectionMode="None">
-            <Syncfusion:SfDataGrid.Columns>
-                <Syncfusion:GridTemplateColumn>
-                    <Syncfusion:GridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Button />
-                            </Grid>
-                        </DataTemplate>
-                    </Syncfusion:GridTemplateColumn.CellTemplate>
-                </Syncfusion:GridTemplateColumn>
-                <Syncfusion:GridTextColumn MappingName="PropertyName" />
-                <Syncfusion:GridTemplateColumn CellTemplateSelector="{StaticResource redValueEditorSelector}" />
-            </Syncfusion:SfDataGrid.Columns>
-        </Syncfusion:SfDataGrid>
+            MinHeight="27"
+            VerticalAlignment="Top"
+            BorderBrush="{StaticResource BorderAlt}"
+            BorderThickness="0,1,0,0">
+            <ContentControl Content="{Binding ElementName=uc, Path=ItemSource}" ContentTemplateSelector="{StaticResource RedValueEditorSelector}" />
+        </Border>
+
     </Grid>
 </UserControl>

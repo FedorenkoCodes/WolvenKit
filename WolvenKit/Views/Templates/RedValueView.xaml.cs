@@ -11,15 +11,7 @@ namespace WolvenKit.Views.Templates
     public partial class RedValueView : UserControl
     {
         public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register(
-            nameof(ItemSource), typeof(RedTypeViewModel), typeof(RedValueView), new PropertyMetadata(null, OnItemSourceChanged));
-
-        private static void OnItemSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is not RedValueView view)
-            {
-                return;
-            }
-        }
+            nameof(ItemSource), typeof(RedTypeViewModel), typeof(RedValueView));
 
         public RedTypeViewModel ItemSource
         {
@@ -30,16 +22,6 @@ namespace WolvenKit.Views.Templates
         public RedValueView()
         {
             InitializeComponent();
-        }
-
-        private readonly GridRowSizingOptions _gridRowResizingOptions = new();
-
-        private void PropertyGrid_OnQueryRowHeight(object sender, QueryRowHeightEventArgs e)
-        {
-            PropertyGrid.GridColumnSizer.GetAutoRowHeight(e.RowIndex, _gridRowResizingOptions, out var autoHeight);
-
-            e.Height = autoHeight >= 30 ? autoHeight : 30;
-            e.Handled = true;
         }
     }
 }

@@ -1,0 +1,30 @@
+﻿<UserControl
+    x:Class="WolvenKit.Views.RedValueEditors.RedBaseClassEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WolvenKit.Views.RedValueEditors"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:redTypes="clr-namespace:WolvenKit.App.ViewModels.Shell.RedTypes;assembly=WolvenKit.App"
+    d:DataContext="{d:DesignInstance redTypes:RedBaseClassViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Syncfusion:SfDataGrid
+        x:Name="PropertyGrid"
+        HorizontalContentAlignment="Stretch"
+        AllowSorting="False"
+        AutoGenerateColumns="False"
+        ColumnSizer="AutoLastColumnFill"
+        HeaderRowHeight="0"
+        ItemsSource="{Binding Value}"
+        QueryRowHeight="PropertyGrid_OnQueryRowHeight"
+        RowHeight="30"
+        SelectionMode="None">
+        <Syncfusion:SfDataGrid.Columns>
+            <Syncfusion:GridTextColumn MappingName="PropertyName" />
+            <Syncfusion:GridTemplateColumn CellTemplateSelector="{StaticResource RedValueViewSelector}" />
+        </Syncfusion:SfDataGrid.Columns>
+    </Syncfusion:SfDataGrid>
+</UserControl>

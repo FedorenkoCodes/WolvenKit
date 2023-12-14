@@ -4,9 +4,12 @@ using WolvenKit.App.ViewModels.Shell.RedTypes;
 
 namespace WolvenKit.Views.RedValueEditors;
 
-public class RedValueEditorSelector : DataTemplateSelector
+public class RedValueViewSelector : DataTemplateSelector
 {
-    public DataTemplate CBoolEditor { get; set; }
+    public DataTemplate DefaultView { get; set; }
+
+    public DataTemplate CArrayView { get; set; }
+    public DataTemplate CBoolView { get; set; }
     public DataTemplate CEnumEditor { get; set; }
     public DataTemplate CKeyValuePairEditor { get; set; }
     public DataTemplate CNameEditor { get; set; }
@@ -19,9 +22,14 @@ public class RedValueEditorSelector : DataTemplateSelector
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
+        if (item is CArrayViewModel)
+        {
+            return CArrayView;
+        }
+
         if (item is CBoolViewModel)
         {
-            return CBoolEditor;
+            return CBoolView;
         }
 
         if (item is CEnumViewModel)
@@ -69,6 +77,6 @@ public class RedValueEditorSelector : DataTemplateSelector
             return gamedataLocKeyWrapperEditor;
         }
 
-        return base.SelectTemplate(item, container);
+        return DefaultView;
     }
 }

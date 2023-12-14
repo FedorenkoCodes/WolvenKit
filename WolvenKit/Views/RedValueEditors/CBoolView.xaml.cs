@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 
 namespace WolvenKit.Views.RedValueEditors;
 /// <summary>
-/// Interaktionslogik für CBoolEditor.xaml
+/// Interaktionslogik für CBoolView.xaml
 /// </summary>
-public partial class CBoolEditor : UserControl
+public partial class CBoolView : UserControl
 {
-    public CBoolEditor()
+    public CBoolView()
     {
         InitializeComponent();
     }

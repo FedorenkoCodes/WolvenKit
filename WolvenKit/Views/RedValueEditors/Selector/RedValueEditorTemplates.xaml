@@ -1,0 +1,226 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:redValueEditors="clr-namespace:WolvenKit.Views.RedValueEditors">
+    <redValueEditors:RedValueEditorSelector x:Key="RedValueEditorSelector">
+        <redValueEditors:RedValueEditorSelector.CArrayEditor>
+            <DataTemplate>
+                <redValueEditors:CArrayEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CArrayEditor>
+        <redValueEditors:RedValueEditorSelector.CBoolEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:CBoolView
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CBoolEditor>
+        <redValueEditors:RedValueEditorSelector.CDictionaryEditor>
+            <DataTemplate>
+                <redValueEditors:CDictionaryEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CDictionaryEditor>
+        <redValueEditors:RedValueEditorSelector.CEnumEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:CEnumEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CEnumEditor>
+        <redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
+            <DataTemplate>
+                <redValueEditors:CKeyValuePairEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CKeyValuePairEditor>
+        <redValueEditors:RedValueEditorSelector.CNameEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:CNameEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CNameEditor>
+        <redValueEditors:RedValueEditorSelector.CNumberEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:CNumberEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CNumberEditor>
+        <redValueEditors:RedValueEditorSelector.CStringEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:CStringValueEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CStringEditor>
+        <redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:TweakDBIDEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
+        <redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
+            <DataTemplate>
+                <redValueEditors:ResourceReferenceEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.ResourceReferenceEditor>
+        <redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
+            <DataTemplate>
+                <redValueEditors:CLegacySingleChannelCurveEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.CLegacySingleChannelCurveEditor>
+        <redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:gamedataLocKeyWrapperEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.gamedataLocKeyWrapperEditor>
+        <redValueEditors:RedValueEditorSelector.RedBaseClassEditor>
+            <DataTemplate>
+                <redValueEditors:RedBaseClassEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.RedBaseClassEditor>
+    </redValueEditors:RedValueEditorSelector>
+</ResourceDictionary>
