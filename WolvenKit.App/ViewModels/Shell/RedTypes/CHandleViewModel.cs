@@ -38,28 +38,26 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         Properties.Add(RedTypeHelper.Create(this, new RedPropertyInfo(val), val));
     }
 
-    public override IList<MenuItem> GetSupportedActions()
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
     {
-        var actions = base.GetSupportedActions();
+        var result = base.GetSupportedActions();
 
         if (_data?.GetValue() == null)
         {
-            actions.Add(CreateMenuItem("Create class", (sender, args) => SetClass()));
+            result.Insert(0, new KeyValuePair<string, Action>("Create class", SetClass));
         }
         else
         {
-            actions.Add(CreateMenuItem("Find all references", (sender, args) => FindAllReferences()));
-
-            actions.Add(CreateMenuItem("Replace class", (sender, args) => SetClass()));
-
-            actions.Add(CreateMenuItem("Clear", (sender, args) =>
+            result.Insert(0, new KeyValuePair<string, Action>("Find all references", FindAllReferences));
+            result.Insert(1, new KeyValuePair<string, Action>("Replace class", SetClass));
+            result.Insert(2, new KeyValuePair<string, Action>("Clear", () =>
             {
                 _data!.SetValue(null);
                 FetchProperties();
             }));
         }
 
-        return actions;
+        return result;
     }
 
     private void FindAllReferences()

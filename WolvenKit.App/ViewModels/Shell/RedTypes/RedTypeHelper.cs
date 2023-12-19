@@ -165,6 +165,8 @@ public class RedTypeHelper
         {
             result.FetchProperties();
             result.UpdateDisplayValue();
+            result.UpdateDisplayDescription();
+            result.UpdateIsDefault();
         }
 
         return result;

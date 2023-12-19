@@ -14,14 +14,21 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropertyChanged, IDisposable
 {
+    #region Fields
+
     protected bool _isExpanded;
     protected bool _isReadOnly;
+    protected bool _isDefault;
 
     protected IRedType? _dataObject;
     protected string _propertyName = "";
     protected string _displayType = "";
     protected string _displayValue = "";
     protected string _displayDescription = "";
+
+    #endregion Fields
+
+    #region Propeties
 
     public RedTypeViewModel? Parent { get; }
     public RedPropertyInfo RedPropertyInfo { get; }
@@ -37,6 +44,12 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     {
         get => _isReadOnly;
         set => SetField(ref _isReadOnly, value);
+    }
+
+    public bool IsDefault
+    {
+        get => _isDefault;
+        set => SetField(ref _isDefault, value);
     }
 
     public IRedType? DataObject
@@ -69,6 +82,31 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         set => SetField(ref _displayDescription, value);
     }
 
+    public string DisplayValueOrType => _displayValue != "" ? _displayValue : _displayType;
+    
+    public EDisplayFormat DisplayFormat
+    {
+        get
+        {
+            if (_displayValue != "")
+            {
+                if (!_isDefault)
+                {
+                    return EDisplayFormat.Value;
+                }
+
+                return EDisplayFormat.ValueDefault;
+            }
+
+            if (!_isDefault)
+            {
+                return EDisplayFormat.Type;
+            }
+
+            return EDisplayFormat.TypeDefault;
+        }
+    }
+
     public string XPath => BuildXPath();
 
     public int ArrayIndex { get; internal set; } = -1;
@@ -81,6 +119,10 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     public ObservableCollection<RedTypeViewModel> Properties { get; protected set; } = new();
 
+    #endregion Propeties
+
+    #region Constructor
+
     public RedTypeViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedType? data)
     {
         Parent = parent;
@@ -91,35 +133,45 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         IsValueType = RedPropertyInfo.BaseType.IsValueType;
     }
 
+    #endregion Constructor
+
+    #region Methods
+
+    protected internal virtual object GetValue() => new ObservableCollection<RedTypeViewModel> { this };
+
+    protected internal virtual void SetValue(RedTypeViewModel value) { }
+
     protected internal virtual void FetchProperties()
     {
 
     }
-
-    protected internal virtual object GetValue() => new ObservableCollection<RedTypeViewModel> { this };
 
     protected internal virtual void UpdateDisplayValue()
     {
 
     }
 
-    protected internal virtual void SetValue(RedTypeViewModel value) {}
-
-    public virtual IList<MenuItem> GetSupportedActions()
+    protected internal virtual void UpdateDisplayDescription()
     {
-        var result = new List<MenuItem>();
+        var propNames = new[] { "name" };
 
-        if (Parent is CArrayViewModel cArrayViewModel)
+        foreach (var name in propNames)
         {
-            result.Add(CreateMenuItem("Remove item", RemoveItem_OnClick));
-
-            void RemoveItem_OnClick(object sender, RoutedEventArgs routedEventArgs)
+            var property = Properties.FirstOrDefault(x => x.PropertyName == name);
+            if (property != null)
             {
-                cArrayViewModel.RemoveItem(this);
+                DisplayDescription = property.DisplayValue;
+                break;
             }
         }
-        
-        return result;
+    }
+
+    protected internal virtual void UpdateIsDefault()
+    {
+        if (RedPropertyInfo.ExtendedPropertyInfo != null)
+        {
+            IsDefault = RedPropertyInfo.ExtendedPropertyInfo.IsDefault(DataObject);
+        }
     }
 
     public string BuildXPath()
@@ -136,76 +188,6 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         parts.Reverse();
 
         return string.Join('\\', parts);
-    }
-
-    public IEnumerable<RedTypeViewModel> GetAllProperties()
-    {
-        foreach (var child in Properties)
-        {
-            yield return child;
-
-            foreach (var childProperty in child.GetAllProperties())
-            {
-                yield return childProperty;
-            }
-        }
-    }
-
-    #region INotifyProperty
-
-    public event PropertyChangingEventHandler? PropertyChanging;
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual void OnPropertyChanging([CallerMemberName] string? propertyName = null) =>
-        PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        if (propertyName == nameof(DataObject))
-        {
-            UpdateDisplayValue();
-
-            Parent?.SetValue(this);
-            Parent?.OnPropertyChanged(nameof(DataObject));
-        }
-
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-        {
-            return false;
-        }
-
-        OnPropertyChanging(propertyName);
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-
-    protected MenuItem CreateMenuItem(string header, Action<object, RoutedEventArgs> onClick)
-    {
-        var menuItem = new MenuItem { Header = header };
-        menuItem.Click += (sender, args) => onClick(sender, args);
-        return menuItem;
-    }
-
-    protected RedTypeViewModel GetRootItem() => Parent != null ? Parent.GetRootItem() : this;
-
-    protected void Select(RedTypeViewModel? selection = null)
-    {
-        var context = GetRootItem().RootContext;
-
-        if (context != null && context.SelectedProperties != null)
-        {
-            selection ??= this;
-
-            context.SelectedProperty = selection;
-            context.SelectedProperties.Clear();
-            context.SelectedProperties.Add(selection);
-        }
     }
 
     protected RedTypeViewModel? GetPropertyFromPath(string path)
@@ -227,10 +209,105 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         return result;
     }
 
+    public IEnumerable<RedTypeViewModel> GetAllProperties()
+    {
+        foreach (var child in Properties)
+        {
+            yield return child;
+
+            foreach (var childProperty in child.GetAllProperties())
+            {
+                yield return childProperty;
+            }
+        }
+    }
+
+    public virtual IList<KeyValuePair<string, Action>> GetSupportedActions()
+    {
+        var result = new List<KeyValuePair<string, Action>>();
+
+        if (Parent is CArrayViewModel cArrayViewModel)
+        {
+            result.Add(new KeyValuePair<string, Action>("Remove item", RemoveItemOnClick));
+
+            void RemoveItemOnClick()
+            {
+                cArrayViewModel.RemoveItem(this);
+            }
+        }
+
+        return result;
+    }
+
+    protected RedTypeViewModel GetRootItem() => Parent != null ? Parent.GetRootItem() : this;
+
+    protected void Select(RedTypeViewModel? selection = null)
+    {
+        var context = GetRootItem().RootContext;
+
+        if (context is { SelectedProperties: not null })
+        {
+            selection ??= this;
+
+            context.SelectedProperty = selection;
+            context.SelectedProperties.Clear();
+            context.SelectedProperties.Add(selection);
+        }
+    }
+
     public void Refresh()
     {
         FetchProperties();
         UpdateDisplayValue();
+    }
+
+    #endregion Methods
+
+    #region INotifyProperty
+
+    public event PropertyChangingEventHandler? PropertyChanging;
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanging([CallerMemberName] string? propertyName = null) =>
+        PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        if (propertyName == nameof(DataObject))
+        {
+            UpdateIsDefault();
+            UpdateDisplayValue();
+            UpdateDisplayDescription();
+
+            Parent?.SetValue(this);
+            Parent?.OnPropertyChanged(nameof(DataObject));
+
+            if (RootContext is { Parent: { } document })
+            {
+                document.SetIsDirty(true);
+            }
+        }
+
+        if (propertyName == nameof(DisplayValue) || propertyName == nameof(DisplayType))
+        {
+            OnPropertyChanged(nameof(DisplayValueOrType));
+            OnPropertyChanged(nameof(DisplayFormat));
+        }
+
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
+        OnPropertyChanging(propertyName);
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 
     #endregion INotifyProperty

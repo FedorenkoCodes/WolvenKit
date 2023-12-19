@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using System.Windows.Forms;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
@@ -17,11 +18,15 @@ public class CMeshViewModel : CResourceViewModel<CMesh>
             return;
         }
 
-        string[] keys =
+        string[] localKeys =
         {
             "localMaterialBuffer.materials", 
             "preloadLocalMaterialInstances", 
-            "externalMaterials", 
+        };
+
+        string[] externalKeys =
+        {
+            "externalMaterials",
             "preloadExternalMaterials",
         };
 
@@ -31,7 +36,7 @@ public class CMeshViewModel : CResourceViewModel<CMesh>
 
             ushort idx = materialEntry.Index;
 
-            foreach (var key in keys)
+            foreach (var key in materialEntry.IsLocalInstance ? localKeys : externalKeys)
             {
                 var list = GetPropertyFromPath(key);
                 if (list is not null && list.Properties.Count > idx)

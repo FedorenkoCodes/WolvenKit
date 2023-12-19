@@ -40,14 +40,6 @@ public class CLegacySingleChannelCurveViewModel : RedTypeViewModel<IRedLegacySin
             Properties.Add(entry);
         }
     }
-
-    protected internal override void SetValue(RedTypeViewModel value)
-    {
-        if (value.IsValueType)
-        {
-            
-        }
-    }
 }
 
 public class CLegacySingleChannelCurvePointViewModel : RedTypeViewModel<IRedCurvePoint>

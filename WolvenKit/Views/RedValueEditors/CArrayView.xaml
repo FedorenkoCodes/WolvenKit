@@ -51,10 +51,10 @@
         <Button
             x:Name="DeleteAllItems"
             Height="12"
-            Click="DeleteAllItems_OnClick"
             Padding="0"
             VerticalAlignment="Center"
             Background="Transparent"
+            Click="DeleteAllItems_OnClick"
             Style="{StaticResource ButtonCustom}">
             <StackPanel Orientation="Horizontal">
                 <iconPacks:PackIconVaadinIcons

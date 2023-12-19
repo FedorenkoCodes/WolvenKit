@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using SharpDX;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -20,19 +22,19 @@ public class CWeakHandleViewModel : RedTypeViewModel<IRedWeakHandle>
         }
     }
 
-    public override IList<MenuItem> GetSupportedActions()
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
     {
-        var actions = base.GetSupportedActions();
+        var result = base.GetSupportedActions();
 
         if (_data?.GetValue() != null)
         {
-            actions.Add(CreateMenuItem("Go to source", GoToSource));
+            result.Insert(0, new KeyValuePair<string, Action>("Go to source", GoToSource));
         }
 
-        return actions;
+        return result;
     }
 
-    private void GoToSource(object sender, RoutedEventArgs routedEventArgs)
+    private void GoToSource()
     {
         var rootItem = GetRootItem();
 

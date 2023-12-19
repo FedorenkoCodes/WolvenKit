@@ -47,7 +47,36 @@
                 <ContextMenu />
             </Syncfusion:SfTreeGrid.RecordContextMenu>
             <Syncfusion:SfTreeGrid.Columns>
-                <Syncfusion:TreeGridTextColumn HeaderText="Name" MappingName="PropertyName" />
+                <Syncfusion:TreeGridTemplateColumn HeaderText="Name" MappingName="PropertyName">
+                    <Syncfusion:TreeGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding PropertyName}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Value}">
+                                                <Setter Property="Foreground" Value="White" />
+                                                <Setter Property="FontStyle" Value="Normal" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.ValueDefault}">
+                                                <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                                <Setter Property="FontStyle" Value="Italic" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Type}">
+                                                <Setter Property="Foreground" Value="White" />
+                                                <Setter Property="FontStyle" Value="Normal" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.TypeDefault}">
+                                                <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                                <Setter Property="FontStyle" Value="Italic" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </Syncfusion:TreeGridTemplateColumn.CellTemplate>
+                </Syncfusion:TreeGridTemplateColumn>
                 <Syncfusion:TreeGridTemplateColumn HeaderText="ValueOrType">
                     <Syncfusion:TreeGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="redTypes:RedTypeViewModel">
@@ -59,15 +88,25 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Kind="{Binding ExtensionIcon}" />
-                                <TextBlock VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center" Text="{Binding DisplayValueOrType}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="White" />
-                                            <Setter Property="Text" Value="{Binding DisplayValue}" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding DisplayValue}" Value="">
+                                                <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Value}">
+                                                    <Setter Property="Foreground" Value="White" />
+                                                    <Setter Property="FontStyle" Value="Normal" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.ValueDefault}">
+                                                    <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                                    <Setter Property="FontStyle" Value="Italic" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Type}">
                                                     <Setter Property="Foreground" Value="{StaticResource WolvenKitTan}" />
-                                                    <Setter Property="Text" Value="{Binding DisplayType}" />
+                                                    <Setter Property="FontStyle" Value="Normal" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.TypeDefault}">
+                                                    <Setter Property="Foreground" Value="{StaticResource WolvenKitTan50}" />
+                                                    <Setter Property="FontStyle" Value="Italic" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

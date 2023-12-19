@@ -23,7 +23,7 @@
         NumberDecimalDigits="{Binding DecimalDigits, Mode=OneWay}"
         Value="{Binding BindingValue}">
         <syncfusion:DoubleTextBox.NumberFormat>
-            <globalization:NumberFormatInfo NumberDecimalSeparator="." />
+            <globalization:NumberFormatInfo NumberDecimalSeparator="." NumberGroupSeparator="" />
         </syncfusion:DoubleTextBox.NumberFormat>
     </syncfusion:DoubleTextBox>
 </UserControl>

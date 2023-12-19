@@ -201,15 +201,21 @@ public partial class RedTreeView2 : UserControl
         {
             foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
             {
-                e.ContextMenu.Items.Add(supportedAction);
+                var menuItem = new MenuItem { Header = supportedAction.Key };
+                menuItem.Click += (_, _) => supportedAction.Value();
+
+                e.ContextMenu.Items.Add(menuItem);
             }
         }
 
         if (SelectedItems.Count > 1 && redTypeViewModel.Parent is IMultiActionSupport multiActionSupport)
         {
-            foreach (var supportedMultiAction in multiActionSupport.GetSupportedMultiActions(SelectedItems))
+            foreach (var supportedMultiAction in multiActionSupport.GetSupportedMultiActions())
             {
-                e.ContextMenu.Items.Add(supportedMultiAction);
+                var menuItem = new MenuItem { Header = supportedMultiAction.Key };
+                menuItem.Click += (_, _) => supportedMultiAction.Value(SelectedItems);
+
+                e.ContextMenu.Items.Add(menuItem);
             }
         }
 

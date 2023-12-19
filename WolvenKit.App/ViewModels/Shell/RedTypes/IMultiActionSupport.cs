@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Windows.Controls;
+﻿using System;
+using System.Collections.Generic;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public interface IMultiActionSupport
 {
-    public IList<MenuItem> GetSupportedMultiActions(IList<object> selectedItems);
+    public IList<KeyValuePair<string, Action<IList<object>>>> GetSupportedMultiActions();
 }

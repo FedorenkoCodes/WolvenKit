@@ -67,19 +67,19 @@ public class CDictionaryViewModel : CArrayViewModel
         return _viewCache;
     }
 
-    public override IList<MenuItem> GetSupportedActions() =>
-        new List<MenuItem>
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    {
+        var result = base.GetSupportedActions();
+
+        result.Insert(0, new KeyValuePair<string, Action>("New item", AddClass));
+        result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", () =>
         {
-            CreateMenuItem("New item", (sender, args) =>
-            {
-                AddClass();
-            }),
-            CreateMenuItem("Clear item(s)", (sender, args) =>
-            {
-                _data!.Clear();
-                FetchProperties();
-            })
-        };
+            _data!.Clear();
+            FetchProperties();
+        }));
+
+        return result;
+    }
 
     private async void AddClass()
     {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 using WolvenKit.App.ViewModels.Dialogs;
 using WolvenKit.RED4.Types;
@@ -19,6 +18,21 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
     public CArrayViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
     {
         ExtensionIcon = "SymbolArray";
+
+        DisplayType = $"{RedPropertyInfo.RedTypeName}";
+        if (_data != null)
+        {
+            DisplayType += $" [{_data.Count}]";
+        }
+    }
+
+    protected internal override void UpdateDisplayValue()
+    {
+        DisplayType = $"{RedPropertyInfo.RedTypeName}";
+        if (_data != null)
+        {
+            DisplayType += $" [{_data.Count}]";
+        }
     }
 
     protected internal override void FetchProperties()
@@ -76,56 +90,43 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
         if (value.IsValueType)
         {
             _data![value.ArrayIndex] = value.DataObject;
+            OnPropertyChanged(nameof(DataObject));
         }
     }
 
-    public IList<MenuItem> GetSupportedMultiActions(IList<object> selectedItems)
-    {
-        return new List<MenuItem>
+    public IList<KeyValuePair<string, Action<IList<object>>>> GetSupportedMultiActions() =>
+        new List<KeyValuePair<string, Action<IList<object>>>>
         {
-            CreateMenuItem("Remove items", (sender, args) => { RemoveItems(selectedItems); })
+            new("Remove items", RemoveItems)
         };
+
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    {
+        var result = base.GetSupportedActions();
+
+        result.Insert(0, new KeyValuePair<string, Action>("New item", AddItem));
+        result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", Clear));
+
+        return result;
     }
 
-    private new void Refresh()
+    public void AddItem()
     {
-        FetchProperties();
-        UpdateDisplayValue();
-
-        if (Properties.Count > 0)
+        if (RedPropertyInfo.InnerType!.IsAssignableTo(typeof(RedBaseClass)))
         {
-            Select(Properties[^1]);
+            AddClass();
         }
         else
         {
-            Select();
+            var data = RedTypeManager.CreateRedType(RedPropertyInfo.InnerType!);
+            _data!.Add(data);
+
+            var item = AddItem(Properties.Count, data, null, true);
+
+            OnPropertyChanged(nameof(DataObject));
+            Select(item);
         }
-        
     }
-
-    public override IList<MenuItem> GetSupportedActions() =>
-        new List<MenuItem>
-        {
-            CreateMenuItem("New item", (sender, args) =>
-            {
-                if (RedPropertyInfo.InnerType!.IsAssignableTo(typeof(RedBaseClass)))
-                {
-                    AddClass();
-                }
-                else
-                {
-                    var data = RedTypeManager.CreateRedType(RedPropertyInfo.InnerType!);
-                    _data!.Add(data);
-
-                    var item = AddItem(Properties.Count, data, null, true);
-                    Select(item);
-                }
-            }),
-            CreateMenuItem("Clear item(s)", (sender, args) =>
-            {
-                Clear();
-            })
-        };
 
     private async void AddClass()
     {
@@ -141,6 +142,8 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
             _data!.Add(data);
 
             var item = AddItem(Properties.Count, data, null, true);
+
+            OnPropertyChanged(nameof(DataObject));
             Select(item);
         }
 
@@ -158,6 +161,8 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
                         _data!.Add(data);
 
                         var item = AddItem(Properties.Count, data, null, true);
+
+                        OnPropertyChanged(nameof(DataObject));
                         Select(item);
                     }
                 })
@@ -168,7 +173,24 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
     public void RemoveItem(RedTypeViewModel redTypeViewModel)
     {
         _data!.RemoveAt(redTypeViewModel.ArrayIndex);
-        Refresh();
+        Properties.RemoveAt(redTypeViewModel.ArrayIndex);
+
+        for (var i = 0; i < Properties.Count; i++)
+        {
+            Properties[i].PropertyName = $"[{i}]";
+            Properties[i].ArrayIndex = i;
+        }
+
+        OnPropertyChanged(nameof(DataObject));
+
+        if (IsExpanded && Properties.Count > 0)
+        {
+            Select(Properties[^1]);
+        }
+        else
+        {
+            Select();
+        }
     }
 
     public void RemoveItems(IList<object> selectedItems)
@@ -176,13 +198,25 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
         foreach (var redTypeViewModel in selectedItems.Cast<RedTypeViewModel>().OrderByDescending(x => x.ArrayIndex))
         {
             _data!.RemoveAt(redTypeViewModel.ArrayIndex);
+            Properties.RemoveAt(redTypeViewModel.ArrayIndex);
         }
-        Refresh();
+
+        for (var i = 0; i < Properties.Count; i++)
+        {
+            Properties[i].PropertyName = $"[{i}]";
+            Properties[i].ArrayIndex = i;
+        }
+
+        OnPropertyChanged(nameof(DataObject));
+        Select();
     }
 
     public void Clear()
     {
         _data!.Clear();
-        Refresh();
+        Properties.Clear();
+
+        OnPropertyChanged(nameof(DataObject));
+        Select();
     }
 }

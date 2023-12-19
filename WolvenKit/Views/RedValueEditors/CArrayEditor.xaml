@@ -23,6 +23,28 @@
             Margin="5"
             Orientation="Horizontal">
             <Button
+                x:Name="CreateItem"
+                Height="12"
+                Padding="0"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Click="CreateItem_OnClick"
+                Style="{StaticResource ButtonCustom}">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconVaadinIcons
+                        Padding="2"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource WolvenKitYellow}"
+                        Kind="PlusCircle" />
+                    <TextBlock
+                        Margin="1,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{StaticResource WolvenKitYellow}"
+                        Text="Create Item In Array" />
+                </StackPanel>
+            </Button>
+
+            <Button
                 x:Name="DeleteSelected"
                 Height="12"
                 Padding="0"
@@ -41,28 +63,6 @@
                         VerticalAlignment="Center"
                         Foreground="{StaticResource WolvenKitRed}"
                         Text="Delete Selected Items" />
-                </StackPanel>
-            </Button>
-
-            <Button
-                x:Name="DeleteAllItems"
-                Height="12"
-                Padding="0"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                Click="DeleteAllItems_OnClick"
-                Style="{StaticResource ButtonCustom}">
-                <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconVaadinIcons
-                        Padding="2"
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource WolvenKitRed}"
-                        Kind="Trash" />
-                    <TextBlock
-                        Margin="1,0,4,0"
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource WolvenKitRed}"
-                        Text="Delete All Items" />
                 </StackPanel>
             </Button>
         </StackPanel>

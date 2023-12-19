@@ -37,6 +37,16 @@ namespace WolvenKit.Views.RedValueEditors
             e.Handled = true;
         }
 
+        private void CreateItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not CArrayViewModel vm)
+            {
+                return;
+            }
+
+            vm.AddItem();
+        }
+
         private void DeleteSelected_OnClick(object sender, RoutedEventArgs e)
         {
             if (DataContext is not CArrayViewModel vm)
@@ -45,16 +55,6 @@ namespace WolvenKit.Views.RedValueEditors
             }
 
             vm.RemoveItems(PropertyGrid.SelectedItems);
-        }
-
-        private void DeleteAllItems_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is not CArrayViewModel vm)
-            {
-                return;
-            }
-
-            vm.Clear();
         }
     }
 }
