@@ -242,8 +242,11 @@ public partial class RedGraph : IDisposable
             var sceneSource = (SceneOutputConnectorViewModel)sceneConnection.Source;
             var sceneDestination = sceneSource.Data.Destinations.FirstOrDefault(x => x.NodeId.Id == sceneConnection.Target.OwnerId);
 
-            sceneSource.Data.Destinations.Remove(sceneDestination);
-            Connections.Remove(sceneConnection);
+            if (sceneDestination != null)
+            {
+                sceneSource.Data.Destinations.Remove(sceneDestination);
+                Connections.Remove(sceneConnection);
+            }
         }
     }
 
