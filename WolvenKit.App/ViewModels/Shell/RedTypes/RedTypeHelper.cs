@@ -16,6 +16,8 @@ public class RedTypeHelper
 
     public RedTypeViewModel Create(RDTDataViewModel parentDataContext, IRedType data) => Create(null, new RedPropertyInfo(data), data, parentDataContext);
 
+    public T? Create<T>(RDTDataViewModel parentDataContext, IRedType data) where T : RedTypeViewModel => default;
+
     public RedTypeViewModel Create(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data, RDTDataViewModel? parentDataContext = null, bool fetchData = true)
     {
         RedTypeViewModel? result = null;
@@ -23,6 +25,10 @@ public class RedTypeHelper
         if (typeof(CMesh).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CMeshViewModel(parent, propertyInfo, (CMesh?)data);
+        }
+        if (typeof(worldStreamingSector).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new worldStreamingSectorViewModel(parent, propertyInfo, (worldStreamingSector?)data);
         }
         else if (typeof(CResource).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -43,7 +49,6 @@ public class RedTypeHelper
         else if (typeof(SharedDataBuffer).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new SharedDataBufferViewModel(parent, propertyInfo, (SharedDataBuffer?)data);
-            ((SharedDataBufferViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(gamedataLocKeyWrapper).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -52,13 +57,10 @@ public class RedTypeHelper
         else if (typeof(IRedHandle).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CHandleViewModel(parent, propertyInfo, (IRedHandle?)data);
-            ((CHandleViewModel)result).AppViewModel = _appViewModel;
-            ((CHandleViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(IRedWeakHandle).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CWeakHandleViewModel(parent, propertyInfo, (IRedWeakHandle?)data);
-            ((CWeakHandleViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(IRedArray).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -70,9 +72,6 @@ public class RedTypeHelper
             {
                 result = new CArrayViewModel(parent, propertyInfo, (IRedArray?)data);
             }
-
-            ((CArrayViewModel)result).AppViewModel = _appViewModel;
-            ((CArrayViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(IRedEnum).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -85,7 +84,6 @@ public class RedTypeHelper
         else if (typeof(IRedLegacySingleChannelCurve).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CLegacySingleChannelCurveViewModel(parent, propertyInfo, (IRedLegacySingleChannelCurve?)data);
-            ((CLegacySingleChannelCurveViewModel)result).RedTypeHelper = this;
         }
         else if (typeof(CName).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -94,6 +92,10 @@ public class RedTypeHelper
         else if (typeof(CString).IsAssignableFrom(propertyInfo.BaseType))
         {
             result = new CStringViewModel(parent, propertyInfo, (CString)data!);
+        }
+        else if (typeof(NodeRef).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            result = new NodeRefViewModel(parent, propertyInfo, (NodeRef)data!);
         }
         else if (typeof(TweakDBID).IsAssignableFrom(propertyInfo.BaseType))
         {
@@ -154,11 +156,7 @@ public class RedTypeHelper
 
         result ??= new DefaultPropertyViewModel(parent, propertyInfo, data);
 
-        if (result is IRedBaseClassViewModel redBaseClassViewModel)
-        {
-            redBaseClassViewModel.RedTypeHelper = this;
-        }
-
+        result.RedTypeHelper = this;
         result.RootContext = parentDataContext;
 
         if (fetchData)
@@ -171,4 +169,6 @@ public class RedTypeHelper
 
         return result;
     }
+
+    public AppViewModel GetAppViewModel() => _appViewModel;
 }

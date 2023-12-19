@@ -53,15 +53,6 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
 
         _data = data;
         Properties.Add(_redTypeHelper.Create(this, _data));
-        
-        if (SelectedChunk == null && Chunks.Count > 0)
-        {
-            SelectedChunk = Chunks[0];
-            if (SelectedChunks is IList lst)
-            {
-                lst.Add(Chunks[0]);
-            }
-        }
 
         Nodes.Add(new ResourcePathWrapper(this, new ReferenceSocket(Chunks[0].RelativePath), _appViewModel, _chunkViewmodelFactory));
         _nodePaths.Add(Chunks[0].RelativePath);

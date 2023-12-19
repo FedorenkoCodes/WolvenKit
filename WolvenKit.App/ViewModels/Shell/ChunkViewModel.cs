@@ -1215,7 +1215,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             ObservableCollection<string> existing = new();
             if (db.GetValue().Data is worldNodeDataBuffer worldNodeDataBuffer)
             {
-                worldNodeDataBuffer.Add(new worldNodeData());
+                worldNodeDataBuffer.Entries.Add(new worldNodeData());
                 RecalculateProperties(worldNodeDataBuffer);
                 return;
             }
@@ -1272,7 +1272,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             }
             else if (Parent.Data is IRedBufferPointer db3 && db3.GetValue().Data is worldNodeDataBuffer dict)
             {
-                dict.Remove((worldNodeData)Data);
+                dict.Entries.Remove((worldNodeData)Data);
                 //dict.RemoveAt(((worldNodeData)Data).NodeIndex);
             }
             else
@@ -1354,7 +1354,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         {
             if (Parent?.Data is DataBuffer rb && Parent?.Parent?.Data is worldStreamingSector && rb.Data is worldNodeDataBuffer wndb)
             {
-                WriteObjectToJSON(wndb.ToList());
+                WriteObjectToJSON(wndb.Entries.ToList());
             }
         }
         catch (Exception ex)

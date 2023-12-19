@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
-using System.Windows.Controls;
 using WolvenKit.App.ViewModels.Dialogs;
 using WolvenKit.RED4.Types;
 
@@ -11,9 +9,6 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 {
-    internal AppViewModel AppViewModel { get; set; } = null!;
-    internal RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public CHandleViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedHandle? data) : base(parent, redPropertyInfo, data)
     {
         ExtensionIcon = "References";
@@ -113,11 +108,13 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 
         if (existing.Count > 1)
         {
-            await AppViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+            var appViewModel = RedTypeHelper.GetAppViewModel();
+
+            await appViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
             {
                 DialogHandler = (model =>
                 {
-                    AppViewModel.CloseDialogCommand.Execute(null);
+                    appViewModel.CloseDialogCommand.Execute(null);
                     if (model is CreateClassDialogViewModel createClassDialogViewModel &&
                         !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
                     {

@@ -20,8 +20,6 @@ namespace WolvenKit.App.Factories;
 
 public class PaneViewModelFactory : IPaneViewModelFactory
 {
-    private readonly IChunkViewmodelFactory _chunkViewmodelFactory;
-
     private readonly ILoggerService _loggerService;
     private readonly IProjectManager _projectManager;
     private readonly IWatcherService _watcherService;
@@ -50,7 +48,6 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         ISettingsManager settingsManager,
         INotificationService notificationService,
         IArchiveManager archiveManager,
-        IChunkViewmodelFactory chunkViewmodelFactory,
         Red4ParserService parserService,
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
@@ -68,7 +65,6 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         _settingsManager = settingsManager;
         _notificationService = notificationService;
         _archiveManager = archiveManager;
-        _chunkViewmodelFactory = chunkViewmodelFactory;
         _parserService = parserService;
         _tweakDbService = tweakDbService;
         _locKeyService = locKeyService;
@@ -84,7 +80,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
     public AssetBrowserViewModel AssetBrowserViewModel(AppViewModel appViewModel)
         => new(appViewModel, _projectManager, _notificationService, _gameController, _archiveManager, _settingsManager, _progressService, _loggerService, _pluginService, _watcherService);
     public TweakBrowserViewModel TweakBrowserViewModel(AppViewModel appViewModel) 
-        => new(appViewModel, _chunkViewmodelFactory, _settingsManager, _notificationService, _projectManager, _loggerService, _tweakDbService, _locKeyService);
+        => new(appViewModel, _settingsManager, _notificationService, _projectManager, _loggerService, _tweakDbService, _locKeyService);
     public LocKeyBrowserViewModel LocKeyBrowserViewModel() => new(_projectManager, _loggerService, _watcherService, _progressService, _modTools, _gameController, _archiveManager, _locKeyService);
     
     public ImportViewModel ImportViewModel() => new(_archiveManager, _notificationService, _settingsManager, _loggerService, _watcherService, _projectManager, _progressService, _gameController, _parserService, _importExportHelper);

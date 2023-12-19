@@ -20,31 +20,51 @@ public class worldNodeDataReader : Red4Reader, IBufferReader
             // some of this stuff could be worldNodeEditorData
             var t = new worldNodeData();
 
-            t.Position.X = _reader.ReadSingle();
-            t.Position.Y = _reader.ReadSingle();
-            t.Position.Z = _reader.ReadSingle();
-            t.Position.W = _reader.ReadSingle();
+            t.Position = new Vector4
+            {
+                X = _reader.ReadSingle(),
+                Y = _reader.ReadSingle(),
+                Z = _reader.ReadSingle(),
+                W = _reader.ReadSingle(),
+            };
 
-            t.Orientation.I = _reader.ReadSingle();
-            t.Orientation.J = _reader.ReadSingle();
-            t.Orientation.K = _reader.ReadSingle();
-            t.Orientation.R = _reader.ReadSingle();
+            t.Orientation = new Quaternion
+            {
+                I = _reader.ReadSingle(),
+                J = _reader.ReadSingle(),
+                K = _reader.ReadSingle(),
+                R = _reader.ReadSingle(),
+            };
 
-            t.Scale.X = _reader.ReadSingle();
-            t.Scale.Y = _reader.ReadSingle();
-            t.Scale.Z = _reader.ReadSingle();
+            t.Scale = new Vector3
+            {
+                X = _reader.ReadSingle(),
+                Y = _reader.ReadSingle(),
+                Z = _reader.ReadSingle()
+            };
 
-            t.Pivot.X = _reader.ReadSingle();
-            t.Pivot.Y = _reader.ReadSingle();
-            t.Pivot.Z = _reader.ReadSingle();
+            t.Pivot = new Vector3
+            {
+                X = _reader.ReadSingle(),
+                Y = _reader.ReadSingle(),
+                Z = _reader.ReadSingle()
+            };
 
-            t.Bounds.Min.X = _reader.ReadSingle();
-            t.Bounds.Min.Y = _reader.ReadSingle();
-            t.Bounds.Min.Z = _reader.ReadSingle();
-
-            t.Bounds.Max.X = _reader.ReadSingle();
-            t.Bounds.Max.Y = _reader.ReadSingle();
-            t.Bounds.Max.Z = _reader.ReadSingle();
+            t.Bounds = new Box
+            {
+                Min = new Vector4
+                {
+                    X = _reader.ReadSingle(),
+                    Y = _reader.ReadSingle(),
+                    Z = _reader.ReadSingle()
+                },
+                Max = new Vector4
+                {
+                    X = _reader.ReadSingle(),
+                    Y = _reader.ReadSingle(),
+                    Z = _reader.ReadSingle()
+                }
+            };
 
             t.Id = _reader.ReadUInt64();
 
@@ -70,18 +90,18 @@ public class worldNodeDataReader : Red4Reader, IBufferReader
                 data.Lookup[t.NodeIndex] = new();
             }
             data.Lookup[t.NodeIndex].Add(t);
-            data.Add(t);
+            data.Entries.Add(t);
         }
 
         if (buffer.Parent is worldStreamingSector wss)
         {
             wss.VariantNodes = new CArray<CArray<RedBaseClass>>();
-            for (int i = 0; i < wss.VariantIndices.Count; i++)
+            for (var i = 0; i < wss.VariantIndices.Count; i++)
             {
                 var ra = new CArray<RedBaseClass>();
-                for (int j = wss.VariantIndices[i]; j < data.Count && (((i + 1) < wss.VariantIndices.Count && j < wss.VariantIndices[i + 1]) || ((i + 1) >= wss.VariantIndices.Count && j < data.Count)); j++)
+                for (int j = wss.VariantIndices[i]; j < data.Entries.Count && (((i + 1) < wss.VariantIndices.Count && j < wss.VariantIndices[i + 1]) || ((i + 1) >= wss.VariantIndices.Count && j < data.Entries.Count)); j++)
                 {
-                    ra.Add(data[j]);
+                    ra.Add(data.Entries[j]);
                 }
                 if (i == wss.PersisentNodeIndex)
                 {

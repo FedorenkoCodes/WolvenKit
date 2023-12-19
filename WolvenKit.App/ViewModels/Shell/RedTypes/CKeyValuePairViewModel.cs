@@ -1,12 +1,9 @@
-﻿using System;
-using WolvenKit.RED4.Types;
+﻿using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CKeyValuePairViewModel : RedTypeViewModel<CKeyValuePair>
 {
-    internal RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public CKeyValuePairViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, CKeyValuePair? data) : base(parent, redPropertyInfo, data)
     {
     }

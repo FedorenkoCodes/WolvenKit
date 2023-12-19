@@ -30,8 +30,13 @@ public class CEnumViewModel : RedTypeViewModel<IRedEnum>
         ExtensionIcon = "SymbolEnum";
 
         EnumValues = Enum.GetNames(redPropertyInfo.InnerType!);
-        _selectedValue = EnumValues[0];
 
+        _selectedValue = "";
+        if (EnumValues.Length > 0)
+        {
+            _selectedValue = EnumValues[0];
+        }
+        
         if (data != null)
         {
             _selectedValue = data.ToEnumString();

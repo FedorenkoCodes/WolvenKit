@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Controls;
 using WolvenKit.App.ViewModels.Dialogs;
 using WolvenKit.RED4.Types;
 
@@ -10,9 +9,6 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 {
-    internal AppViewModel AppViewModel { get; set; } = null!;
-    internal RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public bool ShowProperties { get; set; } = false;
 
     public CArrayViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
@@ -149,11 +145,11 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 
         if (existing.Count > 1)
         {
-            await AppViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+            await RedTypeHelper.GetAppViewModel().SetActiveDialog(new CreateClassDialogViewModel(existing, false)
             {
                 DialogHandler = (model =>
                 {
-                    AppViewModel.CloseDialogCommand.Execute(null);
+                    RedTypeHelper.GetAppViewModel().CloseDialogCommand.Execute(null);
                     if (model is CreateClassDialogViewModel createClassDialogViewModel &&
                         !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
                     {

@@ -4,11 +4,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
 using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.RED4.Types;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
@@ -29,6 +26,8 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     #endregion Fields
 
     #region Propeties
+
+    public RedTypeHelper RedTypeHelper { get; set; } = null!;
 
     public RedTypeViewModel? Parent { get; }
     public RedPropertyInfo RedPropertyInfo { get; }

@@ -2084,7 +2084,7 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
             var name = handle.Chunk.NotNull().DebugName.ToString().NotNull();
             name = "_" + name.Replace("{", "").Replace("}", "").Replace("\\", "_").Replace(".", "_").Replace("!", "").Replace("-", "_") ?? "none";
 
-            var indexStr = string.Join(", ", transforms.Select(x => buffer.IndexOf(x)));
+            var indexStr = string.Join(", ", transforms.Select(x => buffer.Entries.IndexOf(x)));
             var typeStr = handle.Chunk.GetType().Name;
 
             if (handle.Chunk is IRedMeshNode irmn)

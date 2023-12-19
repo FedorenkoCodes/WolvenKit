@@ -44,7 +44,6 @@ public partial class TweakBrowserViewModel : ToolViewModel
     public const string ToolTitle = "Tweak Browser";
 
     private readonly AppViewModel _appViewModel;
-    private readonly IChunkViewmodelFactory _chunkViewmodelFactory;
     private readonly ISettingsManager _settingsManager;
     private readonly INotificationService _notificationService;
     private readonly IProjectManager _projectManager;
@@ -72,7 +71,6 @@ public partial class TweakBrowserViewModel : ToolViewModel
 
     public TweakBrowserViewModel(
         AppViewModel appViewModel,
-        IChunkViewmodelFactory chunkViewmodelFactory, 
         ISettingsManager settingsManager,
         INotificationService notificationService,
         IProjectManager projectManager,
@@ -82,7 +80,6 @@ public partial class TweakBrowserViewModel : ToolViewModel
     ) : base(ToolTitle)
     {
         _appViewModel = appViewModel;
-        _chunkViewmodelFactory = chunkViewmodelFactory;
         _settingsManager = settingsManager;
         _notificationService = notificationService;
         _projectManager = projectManager;
@@ -112,7 +109,6 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 if (SelectedRecordEntry != null && _tweakDB.IsLoaded)
                 {
                     var vm = _redTypeHelper.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull());
-                    //var vm = _chunkViewmodelFactory.ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, _appViewModel, null, true);
                     vm.IsExpanded = true;
                     vm.IsReadOnly = true;
 

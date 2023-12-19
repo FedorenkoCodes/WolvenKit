@@ -290,12 +290,6 @@ public static class RedReflection
 
     public static bool AddRedType(Type type)
     {
-        // hack skipping custom types derived from IRedType
-        if (type.FullName.StartsWith("WolvenKit.RED4.Archive.Buffer"))
-        {
-            return false;
-        }
-
         if (typeof(IRedType).IsAssignableFrom(type))
         {
             var redAttr = type.GetCustomAttribute<REDAttribute>();

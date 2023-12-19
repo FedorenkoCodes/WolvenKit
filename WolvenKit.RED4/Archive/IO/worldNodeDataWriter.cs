@@ -13,7 +13,7 @@ public class worldNodeDataWriter : Red4Writer
 
     public void WriteBuffer(worldNodeDataBuffer ssb)
     {
-        foreach (var t in ssb)
+        foreach (var t in ssb.Entries)
         {
             _writer.Write(t.Position.X);
             _writer.Write(t.Position.Y);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Controls;
 using WolvenKit.App.ViewModels.Dialogs;
 using WolvenKit.RED4.Types;
 
@@ -99,11 +97,11 @@ public class CDictionaryViewModel : CArrayViewModel
             "rRef:CTerrainSetup",
         };
 
-        await AppViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+        await RedTypeHelper.GetAppViewModel().SetActiveDialog(new CreateClassDialogViewModel(existing, false)
         {
             DialogHandler = (model =>
             {
-                AppViewModel.CloseDialogCommand.Execute(null);
+                RedTypeHelper.GetAppViewModel().CloseDialogCommand.Execute(null);
                 if (model is CreateClassDialogViewModel createClassDialogViewModel &&
                     !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
                 {

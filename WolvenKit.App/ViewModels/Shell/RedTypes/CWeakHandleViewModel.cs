@@ -9,8 +9,6 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CWeakHandleViewModel : RedTypeViewModel<IRedWeakHandle>
 {
-    internal RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public CWeakHandleViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedWeakHandle? data) : base(parent, redPropertyInfo, data)
     {
         ExtensionIcon = "References";

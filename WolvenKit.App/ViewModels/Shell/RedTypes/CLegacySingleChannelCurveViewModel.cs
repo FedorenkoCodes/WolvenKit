@@ -1,14 +1,10 @@
 ﻿using System.Linq;
-using DynamicData;
-using Microsoft.Msagl.Core.Layout;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CLegacySingleChannelCurveViewModel : RedTypeViewModel<IRedLegacySingleChannelCurve>
 {
-    public RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public CLegacySingleChannelCurveViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedLegacySingleChannelCurve? data) : base(parent, redPropertyInfo, data)
     {
     }
@@ -44,8 +40,6 @@ public class CLegacySingleChannelCurveViewModel : RedTypeViewModel<IRedLegacySin
 
 public class CLegacySingleChannelCurvePointViewModel : RedTypeViewModel<IRedCurvePoint>
 {
-    public RedTypeHelper RedTypeHelper { get; set; } = null!;
-
     public CLegacySingleChannelCurvePointViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedCurvePoint? data) : base(parent, redPropertyInfo, data)
     {
         UpdateDisplayValue();
