@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:local="clr-namespace:WolvenKit.Views.RedValueEditors"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:redTypes="clr-namespace:WolvenKit.App.ViewModels.Shell.RedTypes;assembly=WolvenKit.App"
@@ -11,9 +12,44 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Button
-        x:Name="CurveEditorButton"
-        Syncfusion:FocusManagerHelper.FocusedElement="True"
-        Click="CurveEditorButton_OnClick"
-        Content="Open Curve Editor" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Grid.Row="0"
+            Margin="5"
+            Orientation="Horizontal">
+            <Button
+                x:Name="CurveEditorButton"
+                Syncfusion:FocusManagerHelper.FocusedElement="True"
+                Click="CurveEditorButton_OnClick"
+                Content="Open Curve Editor" />
+        </StackPanel>
+
+        <Syncfusion:SfDataGrid
+            x:Name="PropertyGrid"
+            Grid.Row="1"
+            HorizontalContentAlignment="Stretch"
+            AllowSorting="False"
+            AutoGenerateColumns="False"
+            ColumnSizer="AutoLastColumnFill"
+            EnableDataVirtualization="True"
+            HeaderRowHeight="0"
+            ItemsSource="{Binding Properties}"
+            QueryRowHeight="PropertyGrid_OnQueryRowHeight"
+            RowHeight="30"
+            SelectionMode="Multiple">
+            <Syncfusion:SfDataGrid.Columns>
+                <Syncfusion:GridCheckBoxSelectorColumn MappingName="SelectorColumn" />
+                <Syncfusion:GridTextColumn
+                    AllowFocus="False"
+                    HeaderText="Index"
+                    MappingName="ArrayIndex" />
+                <Syncfusion:GridTemplateColumn AllowFocus="False" CellTemplateSelector="{StaticResource RedValueViewSelector}" />
+            </Syncfusion:SfDataGrid.Columns>
+        </Syncfusion:SfDataGrid>
+    </Grid>
 </UserControl>

@@ -51,16 +51,15 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
         RedTypeViewModel entry;
         if (data != null)
         {
-            entry = RedTypeHelper.Create(this, new RedPropertyInfo(data) { Index = index }, data);
+            entry = RedTypeHelper.Create(this, new RedPropertyInfo(data) { Index = index }, data, null, true, IsReadOnly);
         }
         else
         {
-            entry = RedTypeHelper.Create(this, new RedPropertyInfo(innerType!) { Index = index }, data);
+            entry = RedTypeHelper.Create(this, new RedPropertyInfo(innerType!) { Index = index }, data, null, true, IsReadOnly);
         }
 
         entry.PropertyName = $"[{index}]";
         entry.ArrayIndex = index;
-        entry.IsReadOnly = IsReadOnly;
 
         Properties.Add(entry);
 
@@ -100,8 +99,11 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
     {
         var result = base.GetSupportedActions();
 
-        result.Insert(0, new KeyValuePair<string, Action>("New item", AddItem));
-        result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", Clear));
+        if (!IsReadOnly)
+        {
+            result.Insert(0, new KeyValuePair<string, Action>("New item", AddItem));
+            result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", Clear));
+        }
 
         return result;
     }

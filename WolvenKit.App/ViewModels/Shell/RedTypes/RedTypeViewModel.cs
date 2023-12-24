@@ -42,7 +42,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     public bool IsReadOnly
     {
         get => _isReadOnly;
-        set => SetField(ref _isReadOnly, value);
+        internal set => SetField(ref _isReadOnly, value);
     }
 
     public bool IsDefault
@@ -189,6 +189,8 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         return string.Join('\\', parts);
     }
 
+    protected RedTypeViewModel? GetPropertyByName(string name) => Properties.FirstOrDefault(x => x.PropertyName == name);
+
     protected RedTypeViewModel? GetPropertyFromPath(string path)
     {
         var parts = path.Split('.');
@@ -225,7 +227,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     {
         var result = new List<KeyValuePair<string, Action>>();
 
-        if (Parent is CArrayViewModel cArrayViewModel)
+        if (!IsReadOnly && Parent is CArrayViewModel cArrayViewModel)
         {
             result.Add(new KeyValuePair<string, Action>("Remove item", RemoveItemOnClick));
 
@@ -254,10 +256,16 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         }
     }
 
-    public void Refresh()
+    public void Refresh(bool refreshProperties = false)
     {
-        FetchProperties();
+        if (refreshProperties)
+        {
+            FetchProperties();
+        }
+
+        UpdateIsDefault();
         UpdateDisplayValue();
+        UpdateDisplayDescription();
     }
 
     #endregion Methods
@@ -274,12 +282,9 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
     {
         if (propertyName == nameof(DataObject))
         {
-            UpdateIsDefault();
-            UpdateDisplayValue();
-            UpdateDisplayDescription();
+            Refresh();
 
             Parent?.SetValue(this);
-            Parent?.OnPropertyChanged(nameof(DataObject));
 
             if (RootContext is { Parent: { } document })
             {

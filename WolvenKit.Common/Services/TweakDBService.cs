@@ -48,7 +48,30 @@ namespace WolvenKit.Common.Services
 
         private void OnLoadDB() => Loaded?.Invoke(this, EventArgs.Empty);
 
-        public async Task LoadDB(string path)
+        public void LoadDB(string path)
+        {
+            if (IsLoaded || _isLoading)
+            {
+                return;
+            }
+
+            _isLoading = true;
+
+            using var fh = File.OpenRead(path);
+            using var reader = new TweakDBReader(fh);
+
+            if (reader.ReadFile(out var tweakDb) == WolvenKit.RED4.TweakDB.EFileReadErrorCodes.NoError)
+            {
+                s_tweakDb = tweakDb!;
+                OnLoadDB();
+
+                IsLoaded = true;
+            }
+
+            _isLoading = false;
+        }
+
+        public async Task LoadDBAsync(string path)
         {
             if (IsLoaded || _isLoading)
             {

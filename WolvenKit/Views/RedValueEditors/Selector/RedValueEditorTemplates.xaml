@@ -153,6 +153,33 @@
                 </Grid>
             </DataTemplate>
         </redValueEditors:RedValueEditorSelector.CStringEditor>
+        <redValueEditors:RedValueEditorSelector.HDRColorEditor>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding PropertyName, Mode=OneTime}" />
+
+                    <GridSplitter
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        Background="{StaticResource BorderAlt}" />
+
+                    <redValueEditors:HDRColorEditor
+                        Grid.Column="2"
+                        Margin="5,0"
+                        VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+        </redValueEditors:RedValueEditorSelector.HDRColorEditor>
         <redValueEditors:RedValueEditorSelector.TweakDBIDEditor>
             <DataTemplate>
                 <Grid>

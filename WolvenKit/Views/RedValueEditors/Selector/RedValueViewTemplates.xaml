@@ -38,6 +38,11 @@
                 <redValueEditors:CStringValueEditor />
             </DataTemplate>
         </redValueEditors:RedValueViewSelector.CStringEditor>
+        <redValueEditors:RedValueViewSelector.HDRColorEditor>
+            <DataTemplate>
+                <redValueEditors:HDRColorEditor />
+            </DataTemplate>
+        </redValueEditors:RedValueViewSelector.HDRColorEditor>
         <redValueEditors:RedValueViewSelector.TweakDBIDEditor>
             <DataTemplate>
                 <redValueEditors:TweakDBIDEditor />
@@ -48,11 +53,11 @@
                 <redValueEditors:ResourceReferenceEditor />
             </DataTemplate>
         </redValueEditors:RedValueViewSelector.ResourceReferenceEditor>
-        <redValueEditors:RedValueViewSelector.CLegacySingleChannelCurveEditor>
+        <redValueEditors:RedValueViewSelector.CLegacySingleChannelCurveView>
             <DataTemplate>
-                <redValueEditors:CLegacySingleChannelCurveEditor />
+                <redValueEditors:CLegacySingleChannelCurveView />
             </DataTemplate>
-        </redValueEditors:RedValueViewSelector.CLegacySingleChannelCurveEditor>
+        </redValueEditors:RedValueViewSelector.CLegacySingleChannelCurveView>
         <redValueEditors:RedValueViewSelector.gamedataLocKeyWrapperEditor>
             <DataTemplate>
                 <redValueEditors:gamedataLocKeyWrapperEditor />

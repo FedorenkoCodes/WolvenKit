@@ -34,6 +34,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
     private readonly ITweakDBService _tweakDbService;
     private readonly ILocKeyService _locKeyService;
     private readonly ImportExportHelper _importExportHelper;
+    private readonly IRedTypeViewModelFactory _redTypeViewModelFactory;
 
     private readonly PropertiesViewModel _propertiesViewModel;
 
@@ -52,8 +53,8 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
         PropertiesViewModel propertiesViewModel,
-        ImportExportHelper importExportHelper
-        )
+        ImportExportHelper importExportHelper, 
+        IRedTypeViewModelFactory redTypeViewModelFactory)
     {
         _projectManager = projectManager;
         _loggerService = loggerService;
@@ -70,6 +71,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         _locKeyService = locKeyService;
         _propertiesViewModel = propertiesViewModel;
         _importExportHelper = importExportHelper;
+        _redTypeViewModelFactory = redTypeViewModelFactory;
     }
 
     public LogViewModel LogViewModel() => new(_loggerService);
@@ -80,7 +82,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
     public AssetBrowserViewModel AssetBrowserViewModel(AppViewModel appViewModel)
         => new(appViewModel, _projectManager, _notificationService, _gameController, _archiveManager, _settingsManager, _progressService, _loggerService, _pluginService, _watcherService);
     public TweakBrowserViewModel TweakBrowserViewModel(AppViewModel appViewModel) 
-        => new(appViewModel, _settingsManager, _notificationService, _projectManager, _loggerService, _tweakDbService, _locKeyService);
+        => new(appViewModel, _settingsManager, _notificationService, _projectManager, _loggerService, _tweakDbService, _locKeyService, _redTypeViewModelFactory);
     public LocKeyBrowserViewModel LocKeyBrowserViewModel() => new(_projectManager, _loggerService, _watcherService, _progressService, _modTools, _gameController, _archiveManager, _locKeyService);
     
     public ImportViewModel ImportViewModel() => new(_archiveManager, _notificationService, _settingsManager, _loggerService, _watcherService, _projectManager, _progressService, _gameController, _parserService, _importExportHelper);

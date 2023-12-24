@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -51,6 +52,36 @@ public class ResourceReferenceViewModel : RedTypeViewModel<IRedRef>
     }
 
     protected internal override void UpdateDisplayValue() => DisplayValue = _data!.DepotPath.IsResolvable ? _data!.DepotPath.GetResolvedText()! : _data!.DepotPath.GetRedHash().ToString();
+
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    {
+        var result = base.GetSupportedActions();
+
+        result.Insert(0, new KeyValuePair<string, Action>("Go to file", GoToFile));
+        result.Insert(1, new KeyValuePair<string, Action>("Add file to project", AddFileToProject));
+
+        return result;
+    }
+
+    private void GoToFile()
+    {
+        if (_data == null)
+        {
+            return;
+        }
+
+        RedTypeHelper.GetAppViewModel().OpenFileFromDepotPath(_data.DepotPath);
+    }
+
+    private void AddFileToProject()
+    {
+        if (_data == null)
+        {
+            return;
+        }
+
+        RedTypeHelper.GetGameController().AddFileToModModal(_data.DepotPath);
+    }
 
     private void UpdatePath(string? path)
     {

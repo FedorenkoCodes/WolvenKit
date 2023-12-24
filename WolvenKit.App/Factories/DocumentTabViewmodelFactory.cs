@@ -20,6 +20,7 @@ public class DocumentTabViewmodelFactory : IDocumentTabViewmodelFactory
     private readonly IGameControllerFactory _gameController;
     private readonly IModTools _modTools;
     private readonly GeometryCacheService _geometryCacheService;
+    private readonly IRedTypeViewModelFactory _redTypeViewModelFactory;
 
     public DocumentTabViewmodelFactory(
         ILoggerService loggerService,
@@ -27,7 +28,8 @@ public class DocumentTabViewmodelFactory : IDocumentTabViewmodelFactory
         ISettingsManager settingsManager,
         IGameControllerFactory gameController,
         IModTools modTools,
-        GeometryCacheService geometryCacheService)
+        GeometryCacheService geometryCacheService, 
+        IRedTypeViewModelFactory redTypeViewModelFactory)
     {
         _loggerService = loggerService;
         _parserService = parserService;
@@ -35,6 +37,7 @@ public class DocumentTabViewmodelFactory : IDocumentTabViewmodelFactory
         _gameController = gameController;
         _modTools = modTools;
         _geometryCacheService = geometryCacheService;
+        _redTypeViewModelFactory = redTypeViewModelFactory;
     }
 
     public RDTInkTextureAtlasViewModel RDTInkTextureAtlasViewModel(inkTextureAtlas atlas, CBitmapTexture xbm, RedDocumentViewModel file)
@@ -44,9 +47,9 @@ public class DocumentTabViewmodelFactory : IDocumentTabViewmodelFactory
     public RDTTextureViewModel RDTTextureViewModel(Stream stream, RedDocumentViewModel file) => new(stream, file, _loggerService, _parserService);
 
     public RDTDataViewModel RDTDataViewModel(IRedType data, RedDocumentViewModel parent, AppViewModel appViewModel, IChunkViewmodelFactory chunkViewmodelFactory) 
-        => new(data, parent, appViewModel, chunkViewmodelFactory, _settingsManager, _gameController);
+        => new(data, parent, appViewModel, chunkViewmodelFactory, _settingsManager, _gameController, _redTypeViewModelFactory);
     public RDTDataViewModel RDTDataViewModel(string header, IRedType data, RedDocumentViewModel file, AppViewModel appViewModel, IChunkViewmodelFactory chunkViewmodelFactory) 
-        => new(header, data, file, appViewModel, chunkViewmodelFactory, _settingsManager, _gameController);
+        => new(header, data, file, appViewModel, chunkViewmodelFactory, _settingsManager, _gameController, _redTypeViewModelFactory);
 
     public RDTMeshViewModel RDTMeshViewModel(CMesh data, RedDocumentViewModel file) 
         => new(data, file, _settingsManager, _gameController, _loggerService, _parserService, _modTools, _geometryCacheService);

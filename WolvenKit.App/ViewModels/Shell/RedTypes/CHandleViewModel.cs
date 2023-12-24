@@ -39,17 +39,24 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 
         if (_data?.GetValue() == null)
         {
-            result.Insert(0, new KeyValuePair<string, Action>("Create class", SetClass));
+            if (!IsReadOnly)
+            {
+                result.Insert(0, new KeyValuePair<string, Action>("Create class", SetClass));
+            }
         }
         else
         {
             result.Insert(0, new KeyValuePair<string, Action>("Find all references", FindAllReferences));
-            result.Insert(1, new KeyValuePair<string, Action>("Replace class", SetClass));
-            result.Insert(2, new KeyValuePair<string, Action>("Clear", () =>
+
+            if (!IsReadOnly)
             {
-                _data!.SetValue(null);
-                FetchProperties();
-            }));
+                result.Insert(1, new KeyValuePair<string, Action>("Replace class", SetClass));
+                result.Insert(2, new KeyValuePair<string, Action>("Clear", () =>
+                {
+                    _data!.SetValue(null);
+                    Refresh(true);
+                }));
+            }
         }
 
         return result;
@@ -103,7 +110,7 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         if (existing.Count == 1)
         {
             _data!.SetValue(RedTypeManager.Create(existing[0]));
-            FetchProperties();
+            Refresh(true);
         }
 
         if (existing.Count > 1)
@@ -119,7 +126,7 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
                         !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
                     {
                         _data!.SetValue(RedTypeManager.Create(createClassDialogViewModel.SelectedClass));
-                        FetchProperties();
+                        Refresh(true);
                     }
                 })
             });

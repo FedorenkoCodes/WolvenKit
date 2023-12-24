@@ -161,12 +161,15 @@ public partial class Breadcrumb : UserControl
         Editor.SetCurrentValue(VisibilityProperty, Visibility.Visible);
         StackPanel.SetCurrentValue(VisibilityProperty, Visibility.Collapsed);
 
-        var parts = new List<string>();
-        foreach (var viewModel in ItemsSource)
+        if (ItemsSource != null)
         {
-            parts.Add(viewModel.PropertyName);
+            var parts = new List<string>();
+            foreach (var viewModel in ItemsSource)
+            {
+                parts.Add(viewModel.PropertyName);
+            }
+            Editor.SetCurrentValue(TextBox.TextProperty, string.Join('\\', parts));
         }
-        Editor.SetCurrentValue(TextBox.TextProperty, string.Join('\\', parts));
     }
 
     private void HideEditor()

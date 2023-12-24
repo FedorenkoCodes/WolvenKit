@@ -31,7 +31,7 @@ public class CLegacySingleChannelCurveViewModel : RedTypeViewModel<IRedLegacySin
                 RedTypeHelper = RedTypeHelper
             };
 
-            entry.FetchProperties();
+            entry.Refresh(true);
 
             Properties.Add(entry);
         }
@@ -68,11 +68,13 @@ public class CLegacySingleChannelCurvePointViewModel : RedTypeViewModel<IRedCurv
         if (value.PropertyName == "Point")
         {
             _data!.SetPoint((CFloat)value.DataObject!);
+            OnPropertyChanged(nameof(DataObject));
         }
 
         if (value is { PropertyName: "Value", IsValueType: true })
         {
             _data!.SetValue(value.DataObject!);
+            OnPropertyChanged(nameof(DataObject));
         }
     }
 

@@ -1,4 +1,6 @@
 using WolvenKit.Core.Compression;
+using WolvenKit.RED4.Archive;
+using WolvenKit.RED4.Archive.IO;
 
 namespace WolvenKit.RED4.Types;
 
@@ -55,6 +57,14 @@ public class RedBuffer : IEquatable<RedBuffer>
         }
     }
 
+    public IBufferReader? CreateReader()
+    {
+        if (BufferHelper.TryGetReader(this, out var reader))
+        {
+            return reader;
+        }
+        return null;
+    }
 
     public static RedBuffer CreateBuffer(uint flags, byte[] data)
     {

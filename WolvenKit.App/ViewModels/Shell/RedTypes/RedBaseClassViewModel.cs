@@ -41,7 +41,7 @@ public class RedBaseClassViewModel<T> : RedTypeViewModel<T>, IRedBaseClassViewMo
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 
-            var entry = RedTypeHelper.Create(this, new RedPropertyInfo(propertyInfo), _data.GetProperty(propertyInfo.RedName));
+            var entry = RedTypeHelper.Create(this, new RedPropertyInfo(propertyInfo), _data.GetProperty(propertyInfo.RedName), null, true, IsReadOnly);
             entry.PropertyName = propertyInfo.RedName;
 
             Properties.Add(entry);
@@ -55,6 +55,7 @@ public class RedBaseClassViewModel<T> : RedTypeViewModel<T>, IRedBaseClassViewMo
         if (value.IsValueType)
         {
             _data?.SetProperty(value.PropertyName, value.DataObject);
+            OnPropertyChanged(nameof(DataObject));
         }
     }
 }

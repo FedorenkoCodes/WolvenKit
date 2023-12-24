@@ -99,6 +99,7 @@ namespace WolvenKit
                     services.AddTransient<IChunkViewmodelFactory, ChunkViewmodelFactory>();             // IDocumentTabViewmodelFactory
                     services.AddTransient<IPaneViewModelFactory, PaneViewModelFactory>();               // IChunkViewmodelFactory
                     services.AddTransient<IDocumentViewmodelFactory, DocumentViewmodelFactory>();       //IDocumentTabViewmodelFactory, IPaneViewModelFactory, IChunkViewmodelFactory
+                    services.AddTransient<IRedTypeViewModelFactory, RedTypeViewModelFactory>();
 
                     services.AddSingleton<RedTypeHelper>();
 

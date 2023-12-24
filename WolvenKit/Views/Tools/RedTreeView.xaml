@@ -33,21 +33,17 @@
 
             <Style x:Key="PropertyValueStyle" TargetType="TextBlock">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding Value, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                 Value="null">
+                    <DataTrigger Binding="{Binding Value, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="null">
                         <Setter Property="Foreground" Value="{StaticResource Border}" />
                     </DataTrigger>
-                    <DataTrigger Binding="{Binding IsDefault, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                 Value="True">
+                    <DataTrigger Binding="{Binding IsDefault, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
                         <Setter Property="Foreground" Value="{StaticResource BorderAlt2}" />
                         <Setter Property="FontStyle" Value="Italic" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding IsReadOnly}" Value="True">
                         <Setter Property="Foreground" Value="{StaticResource WolvenKitTan50}" />
                     </DataTrigger>
-                    <DataTrigger
-                        Binding="{Binding IsValueExtrapolated, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                        Value="True">
+                    <DataTrigger Binding="{Binding IsValueExtrapolated, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
                         <Setter Property="Foreground" Value="{StaticResource BorderAlt2}" />
                     </DataTrigger>
                 </Style.Triggers>

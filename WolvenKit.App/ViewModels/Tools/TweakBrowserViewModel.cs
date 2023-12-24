@@ -11,10 +11,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SharpDX.Win32;
 using WolvenKit.App.Factories;
 using WolvenKit.App.Helpers;
 using WolvenKit.App.Models;
@@ -76,7 +74,8 @@ public partial class TweakBrowserViewModel : ToolViewModel
         IProjectManager projectManager,
         ILoggerService loggerService,
         ITweakDBService tweakDbService,
-        ILocKeyService locKeyService
+        ILocKeyService locKeyService,
+        IRedTypeViewModelFactory redTypeViewModelFactory
     ) : base(ToolTitle)
     {
         _appViewModel = appViewModel;
@@ -86,7 +85,8 @@ public partial class TweakBrowserViewModel : ToolViewModel
         _loggerService = loggerService;
         _tweakDB = tweakDbService;
         _locKeyService = locKeyService;
-        _redTypeHelper = new RedTypeHelper(_appViewModel);
+        _redTypeHelper = redTypeViewModelFactory.RedTypeHelper(_appViewModel);
+
         _tweakDB.Loaded += Load;
 
         PropertyChanged += InternalPropertyChanged;
@@ -108,9 +108,8 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 SelectedRecord.Clear();
                 if (SelectedRecordEntry != null && _tweakDB.IsLoaded)
                 {
-                    var vm = _redTypeHelper.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull());
+                    var vm = _redTypeHelper.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), true, true);
                     vm.IsExpanded = true;
-                    vm.IsReadOnly = true;
 
                     SelectedRecord.Add(vm);
                 }
@@ -125,8 +124,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var flat = TweakDBService.GetFlat(SelectedFlatEntry.Item);
                     ArgumentNullException.ThrowIfNull(flat);
 
-                    var selectedFlat = _redTypeHelper.Create(flat);
-                    selectedFlat.IsReadOnly = true;
+                    var selectedFlat = _redTypeHelper.Create(flat, true, true);
                     if (selectedFlat is CArrayViewModel cArrayViewModel)
                     {
                         cArrayViewModel.ShowProperties = true;
@@ -146,20 +144,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
             {
                 if (SelectedQueryEntry != null && _tweakDB.IsLoaded)
                 {
-                    var arr = new CArray<TweakDBID>();
-                    foreach (var query in TweakDBService.GetQuery(SelectedQueryEntry.Item).NotNull())
-                    {
-                        arr.Add(query);
-                    }
-
-                    var selectedQuery = _redTypeHelper.Create(arr);
-                    selectedQuery.IsReadOnly = true;
-                    if (selectedQuery is CArrayViewModel cArrayViewModel)
-                    {
-                        cArrayViewModel.ShowProperties = true;
-                    }
-
-                    SelectedQuery = selectedQuery;
+                    SelectedQuery = _redTypeHelper.CreateQueryTree(SelectedQueryEntry.Item);
                 }
                 else
                 {
@@ -176,10 +161,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var u = TweakDBService.GetGroupTag(SelectedGroupTagEntry.Item);
                     if (u is not null)
                     {
-                        var selectedGroupTag = _redTypeHelper.Create((CUInt8)u);
-                        selectedGroupTag.IsReadOnly = true;
-
-                        SelectedGroupTag = selectedGroupTag;
+                        SelectedGroupTag = _redTypeHelper.Create((CUInt8)u, true, true);
                     }
                 }
                 else
@@ -235,7 +217,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
             dbPath = Path.Combine(_settingsManager.GetRED4GameRootDir(), "r6", "cache", "tweakdb.bin");
         }
 
-        _tweakDB.LoadDB(dbPath);
+        _tweakDB.LoadDBAsync(dbPath);
     }
 
     private void Load(object? sender, EventArgs eventArgs)

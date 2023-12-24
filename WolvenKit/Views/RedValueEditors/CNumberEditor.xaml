@@ -16,6 +16,7 @@
         Padding="0"
         Background="Transparent"
         BorderThickness="0"
+        GroupSeperatorEnabled="False"
         IsReadOnly="{Binding IsReadOnly, Mode=OneWay}"
         IsScrollingOnCircle="False"
         MaxValue="{Binding MaxValue, Mode=OneWay}"
@@ -23,7 +24,7 @@
         NumberDecimalDigits="{Binding DecimalDigits, Mode=OneWay}"
         Value="{Binding BindingValue}">
         <syncfusion:DoubleTextBox.NumberFormat>
-            <globalization:NumberFormatInfo NumberDecimalSeparator="." NumberGroupSeparator="" />
+            <globalization:NumberFormatInfo NumberDecimalSeparator="." />
         </syncfusion:DoubleTextBox.NumberFormat>
     </syncfusion:DoubleTextBox>
 </UserControl>

@@ -1,4 +1,12 @@
-﻿using WolvenKit.App.ViewModels.Documents;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using WolvenKit.App.Controllers;
+using WolvenKit.App.Services;
+using WolvenKit.App.ViewModels.Documents;
+using WolvenKit.Common.Services;
+using WolvenKit.Core.Extensions;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -6,169 +14,225 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 public class RedTypeHelper
 {
     private readonly AppViewModel _appViewModel;
+    private readonly ILoggerService _loggerService;
+    private readonly ISettingsManager _settingsManager;
+    private readonly IGameControllerFactory _gameControllerFactory;
+    private readonly ITweakDBService _tweakDbService;
 
-    public RedTypeHelper(AppViewModel appViewModel)
+    public RedTypeHelper(AppViewModel appViewModel, ILoggerService loggerService, ISettingsManager settingsManager, IGameControllerFactory gameControllerFactory, ITweakDBService tweakDbService)
     {
         _appViewModel = appViewModel;
+        _loggerService = loggerService;
+        _settingsManager = settingsManager;
+        _gameControllerFactory = gameControllerFactory;
+        _tweakDbService = tweakDbService;
     }
 
-    public RedTypeViewModel Create(IRedType data) => Create(null, new RedPropertyInfo(data), data);
+    public RedTypeViewModel Create(IRedType data, bool fetchData = true, bool isReadOnly = false) => Create(null, new RedPropertyInfo(data), data, null, fetchData, isReadOnly);
 
     public RedTypeViewModel Create(RDTDataViewModel parentDataContext, IRedType data) => Create(null, new RedPropertyInfo(data), data, parentDataContext);
 
-    public T? Create<T>(RDTDataViewModel parentDataContext, IRedType data) where T : RedTypeViewModel => default;
-
-    public RedTypeViewModel Create(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data, RDTDataViewModel? parentDataContext = null, bool fetchData = true)
+    private RedTypeViewModel InternalCreateRedTypeViewModel(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data)
     {
-        RedTypeViewModel? result = null;
-
         if (typeof(CMesh).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CMeshViewModel(parent, propertyInfo, (CMesh?)data);
+            return new CMeshViewModel(parent, propertyInfo, (CMesh?)data);
         }
         if (typeof(worldStreamingSector).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new worldStreamingSectorViewModel(parent, propertyInfo, (worldStreamingSector?)data);
+            return new worldStreamingSectorViewModel(parent, propertyInfo, (worldStreamingSector?)data);
         }
-        else if (typeof(CResource).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CResource).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CResourceViewModel(parent, propertyInfo, (CResource?)data);
+            return new CResourceViewModel(parent, propertyInfo, (CResource?)data);
         }
-        else if (typeof(Vector4).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(HDRColor).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new Vector4ViewModel(parent, propertyInfo, (Vector4?)data);
+            return new HDRColorViewModel(parent, propertyInfo, (HDRColor?)data);
         }
-        else if (typeof(RedBaseClass).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(Vector4).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new RedBaseClassViewModel(parent, propertyInfo, (RedBaseClass?)data);
+            return new Vector4ViewModel(parent, propertyInfo, (Vector4?)data);
         }
-        else if (typeof(DataBuffer).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(RedBaseClass).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new DataBufferViewModel(parent, propertyInfo, (DataBuffer?)data);
+            return new RedBaseClassViewModel(parent, propertyInfo, (RedBaseClass?)data);
         }
-        else if (typeof(SharedDataBuffer).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(DataBuffer).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new SharedDataBufferViewModel(parent, propertyInfo, (SharedDataBuffer?)data);
+            return new DataBufferViewModel(parent, propertyInfo, (DataBuffer?)data);
         }
-        else if (typeof(gamedataLocKeyWrapper).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(SharedDataBuffer).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new gamedataLocKeyWrapperViewModel(parent, propertyInfo, (gamedataLocKeyWrapper?)data);
+            return new SharedDataBufferViewModel(parent, propertyInfo, (SharedDataBuffer?)data);
         }
-        else if (typeof(IRedHandle).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(SerializationDeferredDataBuffer).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CHandleViewModel(parent, propertyInfo, (IRedHandle?)data);
+            return new SerializationDeferredDataBufferViewModel(parent, propertyInfo, (SerializationDeferredDataBuffer?)data);
         }
-        else if (typeof(IRedWeakHandle).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(gamedataLocKeyWrapper).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CWeakHandleViewModel(parent, propertyInfo, (IRedWeakHandle?)data);
+            return new gamedataLocKeyWrapperViewModel(parent, propertyInfo, (gamedataLocKeyWrapper?)data);
         }
-        else if (typeof(IRedArray).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(IRedHandle).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            return new CHandleViewModel(parent, propertyInfo, (IRedHandle?)data);
+        }
+        if (typeof(IRedWeakHandle).IsAssignableFrom(propertyInfo.BaseType))
+        {
+            return new CWeakHandleViewModel(parent, propertyInfo, (IRedWeakHandle?)data);
+        }
+        if (typeof(IRedArray).IsAssignableFrom(propertyInfo.BaseType))
         {
             if (propertyInfo.InnerType == typeof(CKeyValuePair))
             {
-                result = new CDictionaryViewModel(parent, propertyInfo, (CArray<CKeyValuePair>?)data);
+                return new CDictionaryViewModel(parent, propertyInfo, (CArray<CKeyValuePair>?)data);
             }
-            else
-            {
-                result = new CArrayViewModel(parent, propertyInfo, (IRedArray?)data);
-            }
+
+            return new CArrayViewModel(parent, propertyInfo, (IRedArray?)data);
         }
-        else if (typeof(IRedEnum).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(IRedEnum).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CEnumViewModel(parent, propertyInfo, (IRedEnum?)data);
+            return new CEnumViewModel(parent, propertyInfo, (IRedEnum?)data);
         }
-        else if (typeof(IRedRef).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(IRedRef).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new ResourceReferenceViewModel(parent, propertyInfo, (IRedRef?)data);
+            return new ResourceReferenceViewModel(parent, propertyInfo, (IRedRef?)data);
         }
-        else if (typeof(IRedLegacySingleChannelCurve).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(IRedLegacySingleChannelCurve).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CLegacySingleChannelCurveViewModel(parent, propertyInfo, (IRedLegacySingleChannelCurve?)data);
+            return new CLegacySingleChannelCurveViewModel(parent, propertyInfo, (IRedLegacySingleChannelCurve?)data);
         }
-        else if (typeof(CName).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CName).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CNameViewModel(parent, propertyInfo, (CName)data!);
+            return new CNameViewModel(parent, propertyInfo, (CName)data!);
         }
-        else if (typeof(CString).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CString).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CStringViewModel(parent, propertyInfo, (CString)data!);
+            return new CStringViewModel(parent, propertyInfo, (CString)data!);
         }
-        else if (typeof(NodeRef).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(NodeRef).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new NodeRefViewModel(parent, propertyInfo, (NodeRef)data!);
+            return new NodeRefViewModel(parent, propertyInfo, (NodeRef)data!);
         }
-        else if (typeof(TweakDBID).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(TweakDBID).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new TweakDBIDViewModel(parent, propertyInfo, (TweakDBID)data!);
+            return new TweakDBIDViewModel(parent, propertyInfo, (TweakDBID)data!);
         }
-        else if (typeof(CBool).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CBool).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CBoolViewModel(parent, propertyInfo, (CBool)data!);
+            return new CBoolViewModel(parent, propertyInfo, (CBool)data!);
         }
-        else if (typeof(CUInt8).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CUInt8).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CUInt8ViewModel(parent, propertyInfo, (CUInt8)data!);
+            return new CUInt8ViewModel(parent, propertyInfo, (CUInt8)data!);
         }
-        else if (typeof(CInt8).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CInt8).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CInt8ViewModel(parent, propertyInfo, (CInt8)data!);
+            return new CInt8ViewModel(parent, propertyInfo, (CInt8)data!);
         }
-        else if (typeof(CUInt16).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CUInt16).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CUInt16ViewModel(parent, propertyInfo, (CUInt16)data!);
+            return new CUInt16ViewModel(parent, propertyInfo, (CUInt16)data!);
         }
-        else if (typeof(CInt16).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CInt16).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CInt16ViewModel(parent, propertyInfo, (CInt16)data!);
+            return new CInt16ViewModel(parent, propertyInfo, (CInt16)data!);
         }
-        else if (typeof(CUInt32).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CUInt32).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CUInt32ViewModel(parent, propertyInfo, (CUInt32)data!);
+            return new CUInt32ViewModel(parent, propertyInfo, (CUInt32)data!);
         }
-        else if (typeof(CInt32).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CInt32).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CInt32ViewModel(parent, propertyInfo, (CInt32)data!);
+            return new CInt32ViewModel(parent, propertyInfo, (CInt32)data!);
         }
-        else if (typeof(CUInt64).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CUInt64).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CUInt64ViewModel(parent, propertyInfo, (CUInt64)data!);
+            return new CUInt64ViewModel(parent, propertyInfo, (CUInt64)data!);
         }
-        else if (typeof(CInt64).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CInt64).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CInt64ViewModel(parent, propertyInfo, (CInt64)data!);
+            return new CInt64ViewModel(parent, propertyInfo, (CInt64)data!);
         }
-        else if (typeof(CFloat).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CFloat).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CFloatViewModel(parent, propertyInfo, (CFloat)data!);
+            return new CFloatViewModel(parent, propertyInfo, (CFloat)data!);
         }
-        else if (typeof(CDouble).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CDouble).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CDoubleViewModel(parent, propertyInfo, (CDouble)data!);
+            return new CDoubleViewModel(parent, propertyInfo, (CDouble)data!);
         }
-        else if (typeof(CDateTime).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CDateTime).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CDateTimeViewModel(parent, propertyInfo, (CDateTime)data!);
+            return new CDateTimeViewModel(parent, propertyInfo, (CDateTime)data!);
         }
-        else if (typeof(CRUID).IsAssignableFrom(propertyInfo.BaseType))
+        if (typeof(CRUID).IsAssignableFrom(propertyInfo.BaseType))
         {
-            result = new CRUIDViewModel(parent, propertyInfo, (CRUID)data!);
+            return new CRUIDViewModel(parent, propertyInfo, (CRUID)data!);
         }
 
-        result ??= new DefaultPropertyViewModel(parent, propertyInfo, data);
+        return new DefaultPropertyViewModel(parent, propertyInfo, data);
+    }
 
+    public RedTypeViewModel Create(RedTypeViewModel? parent, RedPropertyInfo propertyInfo, IRedType? data, RDTDataViewModel? parentDataContext = null, bool fetchData = true, bool isReadOnly = false)
+    {
+        var result = InternalCreateRedTypeViewModel(parent, propertyInfo, data);
+
+        result.IsReadOnly = isReadOnly;
         result.RedTypeHelper = this;
         result.RootContext = parentDataContext;
 
         if (fetchData)
         {
-            result.FetchProperties();
-            result.UpdateDisplayValue();
-            result.UpdateDisplayDescription();
-            result.UpdateIsDefault();
+            result.Refresh(true);
         }
 
         return result;
     }
 
+    // TODO: Remove this...
+    public CArrayViewModel CreateQueryTree(TweakDBID queryId)
+    {
+        var arr = new CArrayViewModel(null, new RedPropertyInfo(typeof(CArray<TweakDBID>)), null);
+        var query = TweakDBService.GetQuery(queryId).NotNull();
+        for (var i = 0; i < query.Count; i++)
+        {
+            var tvm = new TweakDBIDViewModel(arr, new RedPropertyInfo(typeof(TweakDBID)), query[i]);
+            tvm.RedTypeHelper = this;
+            tvm.IsReadOnly = true;
+            tvm.ArrayIndex = i;
+            tvm.Refresh();
+
+            arr.Properties.Add(tvm);
+        }
+        arr.RedTypeHelper = this;
+        arr.IsReadOnly = true;
+        arr.ShowProperties = true;
+        arr.Refresh();
+
+        return arr;
+    }
+
     public AppViewModel GetAppViewModel() => _appViewModel;
+    
+    public ILoggerService GetLoggerService() => _loggerService;
+    
+    public IGameController GetGameController() => _gameControllerFactory.GetController();
+    
+    public async Task LoadTweakDB()
+    {
+        if (!_tweakDbService.IsLoaded)
+        {
+            var dbPath = Path.Combine(_settingsManager.GetRED4GameRootDir(), "r6", "cache", "tweakdb_ep1.bin");
+            if (!File.Exists(dbPath))
+            {
+                dbPath = Path.Combine(_settingsManager.GetRED4GameRootDir(), "r6", "cache", "tweakdb.bin");
+            }
+
+            _loggerService.Info("Loading TweakDB...");
+            await _tweakDbService.LoadDBAsync(dbPath);
+            _loggerService.Info("TweakDB loaded");
+        }
+    }
 }

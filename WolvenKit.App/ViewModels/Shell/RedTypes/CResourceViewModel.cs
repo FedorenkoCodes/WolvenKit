@@ -6,8 +6,11 @@ public class CResourceViewModel<T> : RedBaseClassViewModel<T> where T : CResourc
 {
     public CResourceViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, T? data) : base(parent, redPropertyInfo, data)
     {
-        PropertyName = "FILE ROOT";
-        IsExpanded = true;
+        if (Parent == null)
+        {
+            PropertyName = "FILE ROOT";
+            IsExpanded = true;
+        }
     }
 }
 

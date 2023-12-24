@@ -31,10 +31,7 @@ public class worldStreamingSectorViewModel : CResourceViewModel<worldStreamingSe
                 entry = new worldNodeDataBufferViewModel(this, new RedPropertyInfo(propertyInfo), (DataBuffer?)_data.GetProperty(propertyInfo.RedName));
                 entry.RedTypeHelper = RedTypeHelper;
 
-                entry.FetchProperties();
-                entry.UpdateDisplayValue();
-                entry.UpdateDisplayDescription();
-                entry.UpdateIsDefault();
+                entry.Refresh(true);
             }
             else
             {
@@ -82,11 +79,10 @@ public class worldNodeDataBufferViewModel : DataBufferViewModel
 
         for (var i = 0; i < worldNodeDataBuffer.Entries.Count; i++)
         {
-            var entry = RedTypeHelper.Create(this, new RedPropertyInfo(worldNodeDataBuffer.Entries[i]), worldNodeDataBuffer.Entries[i]);
+            var entry = RedTypeHelper.Create(this, new RedPropertyInfo(worldNodeDataBuffer.Entries[i]), worldNodeDataBuffer.Entries[i], null, true, IsReadOnly);
 
             entry.ArrayIndex = i;
             entry.PropertyName = $"[{i}]";
-            entry.IsReadOnly = IsReadOnly;
 
             Properties.Add(entry);
         }
@@ -101,13 +97,21 @@ public class worldNodeDataBufferViewModel : DataBufferViewModel
         return base.GetValue();
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions() =>
-        new List<KeyValuePair<string, Action>>
+    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    {
+        var result = new List<KeyValuePair<string, Action>>
         {
-            new("Export NodeData to JSON", ExportNodeData),
-            new("Import from JSON to worldStreamingSector", () => ImportWorldNodeDataTask(true)),
-            new("Import from JSON (no coords update)", () => ImportWorldNodeDataTask(false))
+            new("Export NodeData to JSON", ExportNodeData)
         };
+
+        if (!IsReadOnly)
+        {
+            result.Add(new("Import from JSON to worldStreamingSector", () => ImportWorldNodeDataTask(true)));
+            result.Add(new ("Import from JSON (no coords update)", () => ImportWorldNodeDataTask(false)));
+        }
+
+        return result;
+    }
 
     private void ExportNodeData()
     {

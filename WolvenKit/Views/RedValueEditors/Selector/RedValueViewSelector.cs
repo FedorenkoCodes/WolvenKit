@@ -15,9 +15,10 @@ public class RedValueViewSelector : DataTemplateSelector
     public DataTemplate CNameEditor { get; set; }
     public DataTemplate CNumberEditor { get; set; }
     public DataTemplate CStringEditor { get; set; }
+    public DataTemplate HDRColorEditor { get; set; }
     public DataTemplate TweakDBIDEditor { get; set; }
     public DataTemplate ResourceReferenceEditor { get; set; }
-    public DataTemplate CLegacySingleChannelCurveEditor { get; set; }
+    public DataTemplate CLegacySingleChannelCurveView { get; set; }
     public DataTemplate gamedataLocKeyWrapperEditor { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
@@ -52,6 +53,11 @@ public class RedValueViewSelector : DataTemplateSelector
             return CStringEditor;
         }
 
+        if (item is HDRColorViewModel)
+        {
+            return HDRColorEditor;
+        }
+
         if (item is TweakDBIDViewModel)
         {
             return TweakDBIDEditor;
@@ -69,7 +75,7 @@ public class RedValueViewSelector : DataTemplateSelector
 
         if (item is CLegacySingleChannelCurveViewModel)
         {
-            return CLegacySingleChannelCurveEditor;
+            return CLegacySingleChannelCurveView;
         }
 
         if (item is gamedataLocKeyWrapperViewModel)

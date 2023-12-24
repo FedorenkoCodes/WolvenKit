@@ -1472,7 +1472,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
             dbPath = Path.Combine(_settingsManager.GetRED4GameRootDir(), "r6", "cache", "tweakdb.bin");
         }
 
-        await _tweakDBService.LoadDB(dbPath);
+        await _tweakDBService.LoadDBAsync(dbPath);
     }
 
     /// <summary>

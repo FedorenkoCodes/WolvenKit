@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace WolvenKit.RED4.Types;
 
+[DebuggerDisplay("ExtendedPropertyInfo: {RedName}", Type = "ExtendedPropertyInfo")]
 public class ExtendedPropertyInfo
 {
     private Flags _flags = Flags.Empty;

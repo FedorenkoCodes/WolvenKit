@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace WolvenKit.Common.Services
@@ -9,7 +8,8 @@ namespace WolvenKit.Common.Services
         event EventHandler? Loaded;
 
         public string? GetString(ulong hash);
-        public Task LoadDB(string path);
+        public void LoadDB(string path);
+        public Task LoadDBAsync(string path);
         public bool IsLoaded { get; set; }
     }
 }

@@ -44,7 +44,7 @@ public class CDictionaryViewModel : CArrayViewModel
             entry.RedTypeHelper = RedTypeHelper;
             entry.IsReadOnly = IsReadOnly;
 
-            entry.FetchProperties();
+            entry.Refresh(true);
 
             Properties.Add(entry);
         }
@@ -69,12 +69,15 @@ public class CDictionaryViewModel : CArrayViewModel
     {
         var result = base.GetSupportedActions();
 
-        result.Insert(0, new KeyValuePair<string, Action>("New item", AddClass));
-        result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", () =>
+        if (!IsReadOnly)
         {
-            _data!.Clear();
-            FetchProperties();
-        }));
+            result.Insert(0, new KeyValuePair<string, Action>("New item", AddClass));
+            result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", () =>
+            {
+                _data!.Clear();
+                Refresh(true);
+            }));
+        }
 
         return result;
     }
@@ -106,7 +109,7 @@ public class CDictionaryViewModel : CArrayViewModel
                     !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
                 {
                     _data!.Add(new CKeyValuePair(CName.Empty, RedTypeManager.CreateRedType(createClassDialogViewModel.SelectedClass)));
-                    FetchProperties();
+                    Refresh(true);
                 }
             })
         });

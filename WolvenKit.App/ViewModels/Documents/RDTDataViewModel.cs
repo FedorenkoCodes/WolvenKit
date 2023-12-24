@@ -27,7 +27,7 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     private readonly ISettingsManager _settingsManager;
     private readonly IGameControllerFactory _gameController;
     private readonly IChunkViewmodelFactory _chunkViewmodelFactory;
-    private readonly RedTypeHelper _redTypeHelper;
+    private readonly IRedTypeViewModelFactory _redTypeViewModelFactory;
 
     private readonly AppViewModel _appViewModel;
 
@@ -43,16 +43,17 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     public RDTDataViewModel(IRedType data, RedDocumentViewModel parent, AppViewModel appViewModel,
         IChunkViewmodelFactory chunkViewmodelFactory,
         ISettingsManager settingsManager,
-        IGameControllerFactory gameController) : base(parent, data.GetType().Name)
+        IGameControllerFactory gameController,
+        IRedTypeViewModelFactory redTypeViewModelFactory) : base(parent, data.GetType().Name)
     {
         _settingsManager = settingsManager;
         _gameController = gameController;
         _chunkViewmodelFactory = chunkViewmodelFactory;
         _appViewModel = appViewModel;
-        _redTypeHelper = new RedTypeHelper(appViewModel);
+        _redTypeViewModelFactory = redTypeViewModelFactory;
 
         _data = data;
-        Properties.Add(_redTypeHelper.Create(this, _data));
+        Properties.Add(_redTypeViewModelFactory.RedTypeHelper(_appViewModel).Create(this, _data));
 
         Nodes.Add(new ResourcePathWrapper(this, new ReferenceSocket(Chunks[0].RelativePath), _appViewModel, _chunkViewmodelFactory));
         _nodePaths.Add(Chunks[0].RelativePath);
@@ -61,8 +62,9 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     public RDTDataViewModel(string header, IRedType data, RedDocumentViewModel file, AppViewModel appViewModel,
         IChunkViewmodelFactory chunkViewmodelFactory,
         ISettingsManager settingsManager,
-        IGameControllerFactory gameController) 
-        : this(data, file, appViewModel, chunkViewmodelFactory, settingsManager, gameController) => Header = header;
+        IGameControllerFactory gameController,
+        IRedTypeViewModelFactory redTypeViewModelFactory) 
+        : this(data, file, appViewModel, chunkViewmodelFactory, settingsManager, gameController, redTypeViewModelFactory) => Header = header;
 
     #region properties
 
