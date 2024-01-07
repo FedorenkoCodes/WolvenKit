@@ -81,6 +81,11 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         }
         mainGraph.DocumentViewModel = Parent;
 
+        if (Parent.GetMainFile() is RDTDataViewModel dataViewModel)
+        {
+            mainGraph.NodesViewModel = dataViewModel.Properties[0].GetPropertyFromPath("graph..nodes");
+        }
+
         MainGraph = mainGraph;
     }
 }

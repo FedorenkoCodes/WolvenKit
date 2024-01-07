@@ -52,30 +52,6 @@ public partial class RedTreeView2 : UserControl
     public static readonly DependencyProperty ItemSourceProperty = DependencyProperty.Register(
         nameof(ItemSource), typeof(ObservableCollection<RedTypeViewModel>), typeof(RedTreeView2));
 
-    private static void TreeGridViewOnCurrentChanging(object sender, CurrentChangingEventArgs e)
-    {
-    }
-
-    private static void TreeGridViewOnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-    }
-
-    private static void TreeGridViewOnRecordPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-    }
-
-    private static void TreeGridViewOnPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-    }
-
-    private static void TreeGridViewOnNodeCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-    }
-
-    private static void TreeGridViewOnCurrentChanged(object sender, EventArgs e)
-    {
-    }
-
     public ObservableCollection<RedTypeViewModel> ItemSource
     {
         get => (ObservableCollection<RedTypeViewModel>)GetValue(ItemSourceProperty);
@@ -136,22 +112,8 @@ public partial class RedTreeView2 : UserControl
         Navigator.TextPathChanged += Navigator_OnTextPathChanged;
 
         TreeView.SelectionChanged += TreeView_OnSelectionChanged;
-
         TreeView.TreeGridContextMenuOpening += TreeView_OnTreeGridContextMenuOpening;
-
         TreeView.SelectionController = new GridSelectionControllerExt(TreeView);
-
-        TreeView.Loaded += TreeViewOnLoaded;
-    }
-
-    private void TreeViewOnLoaded(object sender, RoutedEventArgs e)
-    {
-        TreeView.View.CurrentChanged += TreeGridViewOnCurrentChanged;
-        TreeView.View.NodeCollectionChanged += TreeGridViewOnNodeCollectionChanged;
-        TreeView.View.PropertyChanged += TreeGridViewOnPropertyChanged;
-        TreeView.View.RecordPropertyChanged += TreeGridViewOnRecordPropertyChanged;
-        TreeView.View.SourceCollectionChanged += TreeGridViewOnSourceCollectionChanged;
-        TreeView.View.CurrentChanging += TreeGridViewOnCurrentChanging;
     }
 
     private void SearchResults_OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => SearchExpander.SetCurrentValue(Expander.IsExpandedProperty, true);

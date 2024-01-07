@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ReactiveUI;
@@ -7,6 +9,7 @@ using WolvenKit.App.ViewModels.GraphEditor;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Scene;
 using WolvenKit.Views.GraphEditor;
 using Splat;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.Core.Interfaces;
 
 namespace WolvenKit.Views.Documents;
@@ -20,11 +23,32 @@ public partial class RDTGraphView2
         InitializeComponent();
 
         KeyDown += OnKeyDown;
+        Editor.PropertyChanged += Editor_OnPropertyChanged;
 
         this.WhenActivated(disposables =>
         {
             BuildBreadcrumb();
         });
+    }
+
+    private void Editor_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(GraphEditorView.SelectedNode))
+        {
+            if (Editor.Source != null)
+            {
+                var propertyViewModel = Editor.Source.GetPropertyViewModel(Editor.SelectedNode);
+                if (propertyViewModel != null)
+                {
+                    propertyViewModel.IsExpanded = true;
+
+                    NodeTreeView.SetCurrentValue(Tools.RedTreeView2Compact.ItemSourceProperty, new ObservableCollection<RedTypeViewModel>([propertyViewModel]));
+                    return;
+                }
+            }
+
+            NodeTreeView.SetCurrentValue(Tools.RedTreeView2Compact.ItemSourceProperty, null);
+        }
     }
 
     private void Editor_OnNodeDoubleClick(object sender, RoutedEventArgs e) => HandleSubGraph();

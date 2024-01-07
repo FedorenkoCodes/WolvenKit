@@ -6,6 +6,7 @@ using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Scene;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Scene.Internal;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.GraphEditor;
@@ -373,5 +374,10 @@ public partial class RedGraph
         }
 
         return graph;
+    }
+
+    private RedTypeViewModel? GetScenePropertyViewModel(BaseSceneViewModel sceneNode)
+    {
+        throw new NotImplementedException();
     }
 }

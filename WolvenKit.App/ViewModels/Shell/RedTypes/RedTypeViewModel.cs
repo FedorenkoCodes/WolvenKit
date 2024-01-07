@@ -191,7 +191,7 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
 
     protected RedTypeViewModel? GetPropertyByName(string name) => Properties.FirstOrDefault(x => x.PropertyName == name);
 
-    protected RedTypeViewModel? GetPropertyFromPath(string path)
+    public RedTypeViewModel? GetPropertyFromPath(string path)
     {
         var parts = path.Split('.');
 

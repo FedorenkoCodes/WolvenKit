@@ -6,6 +6,7 @@ using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Quest;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Quest.Internal;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.GraphEditor;
@@ -113,10 +114,10 @@ public partial class RedGraph
         wrappedInstance.Location = point;
 
         ((graphGraphDefinition)_data).Nodes.Add(new CHandle<graphGraphNodeDefinition>(instance));
-        if (GetQuestNodesChunkViewModel() is { } nodes)
-        {
-            nodes.RecalculateProperties();
-        }
+        //if (GetQuestNodesChunkViewModel() is { } nodes)
+        //{
+        //    nodes.RecalculateProperties();
+        //}
 
         Nodes.Add(wrappedInstance);
     }
@@ -156,10 +157,10 @@ public partial class RedGraph
             {
                 graph.RemoveAt(i);
 
-                if (GetQuestNodesChunkViewModel() is { } nodes)
-                {
-                    nodes.RecalculateProperties();
-                }
+                //if (GetQuestNodesChunkViewModel() is { } nodes)
+                //{
+                //    nodes.RecalculateProperties();
+                //}
             }
         }
 
@@ -262,39 +263,24 @@ public partial class RedGraph
 
     private void RefreshCVM(questSocketDefinition[] sockets)
     {
-        if (GetQuestNodesChunkViewModel() is { } nodes)
-        {
-            var list = new List<ChunkViewModel>();
-            foreach (var property in nodes.GetAllProperties())
-            {
-                foreach (var socket in sockets)
-                {
-                    if (ReferenceEquals(property.Data, socket.Connections))
-                    {
-                        list.Add(property.Parent!);
-                    }
-                }
-            }
-            foreach (var model in list)
-            {
-                model.RecalculateProperties();
-            }
-        }
-    }
-
-    private ChunkViewModel? GetQuestNodesChunkViewModel()
-    {
-        if (DocumentViewModel?.GetMainFile() is not RDTDataViewModel dataViewModel)
-        {
-            return null;
-        }
-
-        if (dataViewModel.Chunks[0].GetModelFromPath("graph.nodes") is not { } nodes)
-        {
-            return null;
-        }
-
-        return nodes;
+        //if (GetQuestNodesChunkViewModel() is { } nodes)
+        //{
+        //    var list = new List<ChunkViewModel>();
+        //    foreach (var property in nodes.GetAllProperties())
+        //    {
+        //        foreach (var socket in sockets)
+        //        {
+        //            if (ReferenceEquals(property.Data, socket.Connections))
+        //            {
+        //                list.Add(property.Parent!);
+        //            }
+        //        }
+        //    }
+        //    foreach (var model in list)
+        //    {
+        //        model.RecalculateProperties();
+        //    }
+        //}
     }
 
     private void AddQuestConnection(QuestOutputConnectorViewModel source, QuestInputConnectorViewModel destination)
@@ -485,5 +471,23 @@ public partial class RedGraph
         }
 
         return graph;
+    }
+
+    private RedTypeViewModel? GetQuestPropertyViewModel(BaseQuestViewModel questNode)
+    {
+        if (NodesViewModel is not CArrayViewModel nodes)
+        {
+            return null;
+        }
+
+        foreach (var property in nodes.Properties)
+        {
+            if (property.Properties.Count == 1 && ReferenceEquals(property.Properties[0].DataObject, questNode.Data))
+            {
+                return property.Properties[0];
+            }
+        }
+
+        return null;
     }
 }

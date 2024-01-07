@@ -1,0 +1,108 @@
+﻿<UserControl
+    x:Class="WolvenKit.Views.Tools.RedTreeView2Compact"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:redTypes="clr-namespace:WolvenKit.App.ViewModels.Shell.RedTypes;assembly=WolvenKit.App"
+    x:Name="uc"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Syncfusion:SfTreeGrid
+        x:Name="TreeView"
+        Grid.Row="1"
+        AllowResizingColumns="True"
+        AllowSorting="False"
+        AutoGenerateColumnsMode="None"
+        Background="{StaticResource ContentBackground}"
+        ChildPropertyName="Properties"
+        ColumnSizer="Star"
+        ExpandStateMappingName="IsExpanded"
+        GridLinesVisibility="None"
+        ItemsSource="{Binding ElementName=uc, Path=ItemSource}"
+        NavigationMode="Row"
+        SelectedItem="{Binding ElementName=uc, Path=SelectedItem, Mode=TwoWay}"
+        SelectedItems="{Binding ElementName=uc, Path=SelectedItems, Mode=TwoWay}"
+        SelectionMode="Extended">
+        <Syncfusion:SfTreeGrid.ExpanderContextMenu>
+            <ContextMenu />
+        </Syncfusion:SfTreeGrid.ExpanderContextMenu>
+        <Syncfusion:SfTreeGrid.RecordContextMenu>
+            <ContextMenu />
+        </Syncfusion:SfTreeGrid.RecordContextMenu>
+        <Syncfusion:SfTreeGrid.Columns>
+            <Syncfusion:TreeGridTemplateColumn HeaderText="Name" MappingName="PropertyName">
+                <Syncfusion:TreeGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding PropertyName}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Value}">
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="FontStyle" Value="Normal" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.ValueDefault}">
+                                            <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                            <Setter Property="FontStyle" Value="Italic" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Type}">
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="FontStyle" Value="Normal" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.TypeDefault}">
+                                            <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                            <Setter Property="FontStyle" Value="Italic" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </DataTemplate>
+                </Syncfusion:TreeGridTemplateColumn.CellTemplate>
+            </Syncfusion:TreeGridTemplateColumn>
+            <Syncfusion:TreeGridTemplateColumn HeaderText="ValueOrType">
+                <Syncfusion:TreeGridTemplateColumn.CellTemplate>
+                    <DataTemplate DataType="redTypes:RedTypeViewModel">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconCodicons
+                                Width="15"
+                                Height="15"
+                                Margin="0,0,6,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Kind="{Binding ExtensionIcon}" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding DisplayValueOrType}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Value}">
+                                                <Setter Property="Foreground" Value="White" />
+                                                <Setter Property="FontStyle" Value="Normal" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.ValueDefault}">
+                                                <Setter Property="Foreground" Value="#4FFFFFFF" />
+                                                <Setter Property="FontStyle" Value="Italic" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.Type}">
+                                                <Setter Property="Foreground" Value="{StaticResource WolvenKitTan}" />
+                                                <Setter Property="FontStyle" Value="Normal" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DisplayFormat}" Value="{x:Static redTypes:EDisplayFormat.TypeDefault}">
+                                                <Setter Property="Foreground" Value="{StaticResource WolvenKitTan50}" />
+                                                <Setter Property="FontStyle" Value="Italic" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </Syncfusion:TreeGridTemplateColumn.CellTemplate>
+            </Syncfusion:TreeGridTemplateColumn>
+        </Syncfusion:SfTreeGrid.Columns>
+    </Syncfusion:SfTreeGrid>
+</UserControl>

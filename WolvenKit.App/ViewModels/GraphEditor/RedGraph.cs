@@ -13,6 +13,7 @@ using WolvenKit.App.ViewModels.GraphEditor.Nodes;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Quest;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Quest.Internal;
 using WolvenKit.App.ViewModels.GraphEditor.Nodes.Scene.Internal;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.GraphEditor;
@@ -42,6 +43,7 @@ public partial class RedGraph : IDisposable
     public ICommand DisconnectCommand { get; }
 
     public RedDocumentViewModel? DocumentViewModel { get; set; }
+    public RedTypeViewModel? NodesViewModel { get; set; }
 
     static RedGraph()
     {
@@ -229,6 +231,21 @@ public partial class RedGraph : IDisposable
                 node.Center.X - graph.BoundingBox.Center.X - (nvm.Size.Width / 2) + xOffset,
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
         }
+    }
+
+    public RedTypeViewModel? GetPropertyViewModel(NodeViewModel? node)
+    {
+        if (node is BaseSceneViewModel sceneNode)
+        {
+            return GetScenePropertyViewModel(sceneNode);
+        }
+
+        if (node is BaseQuestViewModel questNode)
+        {
+            return GetQuestPropertyViewModel(questNode);
+        }
+
+        return null;
     }
 
     #region IDisposable
