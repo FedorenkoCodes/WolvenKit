@@ -422,8 +422,8 @@ namespace WolvenKit.Modkit.RED4
             //args.FileName = outFileInfo.FullName;
             switch (extAsEnum)
             {
-                case ECookedFileFormat.ent:
-                    return ExportEntity(cr2wStream, "default", outfile);
+                //case ECookedFileFormat.ent:
+                //    return ExportEntity(cr2wStream, "default", outfile);
                 //case ECookedFileFormat.app:
                 //    return HandleEntity(cr2wStream, outfile, settings.Get<EntityExportArgs>());
                 case ECookedFileFormat.opusinfo:
@@ -681,6 +681,8 @@ namespace WolvenKit.Modkit.RED4
                 if (_parserService.TryReadRed4File(ms, out var file))
                 {
                     var img = RedImage.FromRedFile(file);
+                    img.FlipV();
+
                     foreach (var part in parts)
                     {
                         var x = Math.Round(part.ClippingRectInUVCoords.Left * img.Metadata.Width);

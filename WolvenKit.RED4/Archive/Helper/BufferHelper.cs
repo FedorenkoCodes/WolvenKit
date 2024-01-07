@@ -33,7 +33,9 @@ public static class BufferHelper
         s_bufferReaders.Add("animFacialSetup.correctivePosesData", typeof(AnimFacialSetupCorrectivePosesDataReader));
 
         // Save
+        s_bufferReaders.Add("gameSavedStatsData.forcedModifiersBuffer", typeof(ModifiersBufferReader));
         s_bufferReaders.Add("gameSavedStatsData.modifiersBuffer", typeof(ModifiersBufferReader));
+        s_bufferReaders.Add("gameSavedStatsData.savedModifierGroupStatTypesBuffer", typeof(SavedModifierGroupStatTypesBufferReader));
 
         // REDmod
         s_bufferReaders.Add("CMesh.metadata", typeof(CR2WListReader)); // actually just a single one, to lazy...

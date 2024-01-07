@@ -98,6 +98,7 @@ namespace WolvenKit
                     services.AddTransient<IDocumentTabViewmodelFactory, DocumentTabViewmodelFactory>();
                     services.AddTransient<IChunkViewmodelFactory, ChunkViewmodelFactory>();             // IDocumentTabViewmodelFactory
                     services.AddTransient<IPaneViewModelFactory, PaneViewModelFactory>();               // IChunkViewmodelFactory
+                    services.AddTransient<INodeWrapperFactory, NodeWrapperFactory>();
                     services.AddTransient<IDocumentViewmodelFactory, DocumentViewmodelFactory>();       //IDocumentTabViewmodelFactory, IPaneViewModelFactory, IChunkViewmodelFactory
                     services.AddTransient<IRedTypeViewModelFactory, RedTypeViewModelFactory>();
 

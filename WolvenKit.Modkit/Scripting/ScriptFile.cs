@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using WolvenKit.Core.Interfaces;
 
 namespace WolvenKit.Modkit.Scripting;
 
@@ -9,38 +10,30 @@ public partial class ScriptFile
     public ScriptFile(string path)
     {
         Path = path;
-
-        GetInfo();
+        Name = System.IO.Path.GetFileNameWithoutExtension(path);
     }
 
     public string Path { get; }
-    public string Name { get; private set; } = null!;
+    public string Name { get; }
 
-    public ScriptType Type { get; private set; }
+    public ScriptType Type { get; private set; } = ScriptType.General;
     public string? HookExtension { get; private set; }
 
     public string? Version { get; private set; }
     public string? Author { get; private set; }
 
+    public string Content { get; private set; } = string.Empty;
+
     private DateTime _lastModified = DateTime.MinValue;
-    private string _content = string.Empty;
 
-    private void GetInfo()
+    public bool Reload(ILoggerService? loggerService)
     {
-        Name = System.IO.Path.GetFileNameWithoutExtension(Path);
-
-        Type = ScriptType.General;
-        if (Name.StartsWith("ui_"))
+        var lastModified = File.GetLastWriteTimeUtc(Path);
+        if (_lastModified >= lastModified)
         {
-            Type = ScriptType.Ui;
+            return true;
         }
-
-        var hookMatch = HookRegex().Match(Name);
-        if (hookMatch.Success)
-        {
-            Type = ScriptType.Hook;
-            HookExtension = hookMatch.Groups[1].Value;
-        }
+        _lastModified = lastModified;
 
         foreach (var line in File.ReadAllLines(Path))
         {
@@ -62,29 +55,38 @@ public partial class ScriptFile
                         Author = match.Groups[2].Value;
                         break;
 
+                    case "type":
+                        if (Enum.TryParse<ScriptType>(match.Groups[2].Value, true, out var scriptType))
+                        {
+                            Type = scriptType;
+                        }
+                        else
+                        {
+                            loggerService?.Error($"Could not load \"{Path}\". Field \"type\" is invalid \"{match.Groups[2].Value}\"");
+                            return false;
+                        }
+                        break;
+
+                    case "hook_extension":
+                        HookExtension = match.Groups[2].Value;
+                        break;
+
                     default:
                         break;
                 }
             }
         }
-    }
 
-    public string GetContent()
-    {
-        var localLastModified = File.GetLastWriteTimeUtc(Path);
-        if (_lastModified >= localLastModified)
+        if (Type == ScriptType.Hook && string.IsNullOrEmpty(HookExtension))
         {
-            return _content;
+            loggerService?.Error($"Could not load \"{Path}\". Field \"hook_extension\" is not set");
+            return false;
         }
 
-        _content = File.ReadAllText(Path);
-        _lastModified = localLastModified;
+        Content = File.ReadAllText(Path);
 
-        return _content;
+        return true;
     }
-
-    [GeneratedRegex("^hook_(.*)$")]
-    private static partial Regex HookRegex();
 
     [GeneratedRegex("^// @([^\\s]+) (.*)$")]
     private static partial Regex InfoHeaderRegex();
@@ -94,5 +96,6 @@ public enum ScriptType
 {
     General,
     Hook,
+    Lib,
     Ui
 }
