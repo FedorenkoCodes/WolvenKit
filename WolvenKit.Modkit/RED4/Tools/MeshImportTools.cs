@@ -301,7 +301,7 @@ namespace WolvenKit.Modkit.RED4
 
             if (File.Exists(Path.ChangeExtension(inGltfFile.FullName, ".Material.json")) && (args.ImportMaterialOnly || args.ImportMaterials))
             {
-                WriteMatToMesh(ref cr2w, File.ReadAllText(Path.ChangeExtension(inGltfFile.FullName, ".Material.json")), args.Archives);
+                WriteMatToMesh(ref cr2w, File.ReadAllText(Path.ChangeExtension(inGltfFile.FullName, ".Material.json")));
                 if (args.ImportMaterialOnly)
                 {
                     var matOnlyStream = new MemoryStream();
@@ -358,14 +358,14 @@ namespace WolvenKit.Modkit.RED4
             {
                 if (node.Mesh != null)
                 {
-                    meshes.Add(GltfMeshToRawContainer(node));
+                    meshes.Add(GltfMeshToRawContainer(node, args));
                 }
                 else if (args.FillEmpty)
                 {
                     meshes.Add(CreateEmptyMesh(node.Name));
                 }
             }
-            meshes = meshes.OrderBy(o => o.name).ToList();
+            meshes = meshes.OrderBy(mesh => mesh.name).ToList();
 
             var max = new Vec3(float.MinValue, float.MinValue, float.MinValue);
             var min = new Vec3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -392,6 +392,8 @@ namespace WolvenKit.Modkit.RED4
                 }
             }
 
+            // GarmentSupport not accounted here. Might be an issue?
+            // TODO: https://github.com/WolvenKit/WolvenKit/issues/1504 
             meshBlob.BoundingBox.Min = new Vector4 { X = min.X, Y = min.Y, Z = min.Z, W = 1f };
             meshBlob.BoundingBox.Max = new Vector4 { X = max.X, Y = max.Y, Z = max.Z, W = 1f };
 
@@ -521,19 +523,40 @@ namespace WolvenKit.Modkit.RED4
             return meshContainer;
         }
 
-        private static RawMeshContainer GltfMeshToRawContainer(Node node)
+        // TODO: https://github.com/WolvenKit/WolvenKit/issues/1505
+        // Maintaining compatibility but need to review if we really want to support empties via nodes
+        private RawMeshContainer GltfMeshToRawContainer(Node node, GltfImportArgs args)
         {
             if (node.Mesh == null)
             {
+                _loggerService.Warning($"Node {node.Name} has no mesh, creating empty mesh (this is probably wrong.)");
                 return CreateEmptyMesh(node.Name);
             }
 
-            var mesh = node.Mesh;
+            return GltfMeshToRawContainer(node.Mesh, args);
+        }
+
+        private RawMeshContainer GltfMeshToRawContainer(Mesh mesh, GltfImportArgs args)
+        {
             var accessors = mesh.Primitives[0].VertexAccessors.Keys.ToList();
+
+            var parenting = mesh.VisualParents.ToList();
+
+            if (parenting.Count > 1)
+            {
+                throw new ArgumentException($"Mesh {mesh.Name} has more than one parent node! Duplicate the mesh instead of sharing it.");
+            }
+
+            var node = parenting[0];
+
+            if (mesh.Name != node.Name)
+            {
+                _loggerService.Warning($"Mesh name `{mesh.Name}` does not match parent node name `{node.Name}`. Using {(args.OverrideMeshNameWithNodeName ? "NODE" : "MESH")} name.");
+            }
 
             var meshContainer = new RawMeshContainer
             {
-                name = node.Name,
+                name = args.OverrideMeshNameWithNodeName ? node.Name : mesh.Name,
 
                 // Copying PNT w/ RHS to LHS Y+ to Z+
                 positions = mesh.Primitives[0].GetVertices("POSITION").AsVector3Array().ToList().AsParallel().Select(p => new Vec3(p.X, -p.Z, p.Y)).ToArray(),
@@ -651,6 +674,9 @@ namespace WolvenKit.Modkit.RED4
             }
 
             meshContainer.garmentMorph = Array.Empty<Vec3>();
+            // TODO: https://github.com/WolvenKit/WolvenKit/issues/1506
+            //       Mesh Import Needs to Actually Check it's Working with GarmentSupport Targets.
+            //       For now we'll keep assuming GS is at index 0
             if (mesh.Primitives[0].MorphTargetsCount > 0)
             {
                 var idx = mesh.Primitives[0].GetMorphTargetAccessors(0).Keys.ToList().IndexOf("POSITION");
@@ -1030,6 +1056,10 @@ namespace WolvenKit.Modkit.RED4
                     }
                 }
             }
+
+            //source mesh renderMasks for updation 
+            var renderMasks = blob.Header.RenderChunkInfos.Select(s => s.RenderMask).ToList();
+
             // removing existing rendChunks
             blob.Header.RenderChunkInfos.Clear();
 
@@ -1039,7 +1069,7 @@ namespace WolvenKit.Modkit.RED4
                 var chunk = new rendChunk
                 {
                     LodMask = (byte)info.LODLvl[i],
-                    RenderMask = Enums.EMeshChunkFlags.MCF_RenderInScene | Enums.EMeshChunkFlags.MCF_RenderInShadows,
+                    RenderMask = renderMasks[i >= renderMasks.Count ? 0 : i],
                     // based upon VertexBlock, subject to change, incremental will be good, for weightcount ++ etc
                     // VertexFactory is really important to be taken care of properly
                     VertexFactory = 2,
@@ -1061,22 +1091,9 @@ namespace WolvenKit.Modkit.RED4
 
                 chunk.ChunkVertices.VertexLayout = new GpuWrapApiVertexLayoutDesc
                 {
-                    //hash and slotmask are not understood/no-interest, subject to change
-                    Hash = 0,
-                    SlotMask = 0
+                    //hash is not understood/no-interest, subject to change
+                    Hash = 0
                 };
-
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add((byte)info.vpStrides[i]);
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(4);
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(8);
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(8);
-
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(info.unknownOffsets[i] == 0 ? (byte)0 : (byte)4);
-
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(0);
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(0);
-
-                chunk.ChunkVertices.VertexLayout.SlotStrides.Add(info.weightCounts[i] == 0 ? (byte)48 : (byte)64);
 
                 // Position
                 chunk.ChunkVertices.VertexLayout.Elements.Add(new GpuWrapApiVertexPackingPackingElement
@@ -1265,6 +1282,27 @@ namespace WolvenKit.Modkit.RED4
                     StreamType = Enums.GpuWrapApiVertexPackingEStreamType.ST_Invalid
                 });
 
+                chunk.ChunkVertices.VertexLayout.SlotStrides = new CStatic<CUInt8>(8);
+                for (var j = 0; j < 8; j++)
+                {
+                    chunk.ChunkVertices.VertexLayout.SlotStrides.Add(0);
+                }
+
+                foreach (var element in chunk.ChunkVertices.VertexLayout.Elements)
+                {
+                    chunk.ChunkVertices.VertexLayout.SlotStrides[element.StreamIndex] += GetDataSize(element.Type);
+                }
+
+                var slotMask = 0;
+                for (var j = 0; j < chunk.ChunkVertices.VertexLayout.SlotStrides.Count; j++)
+                {
+                    if (chunk.ChunkVertices.VertexLayout.SlotStrides[j] > 0)
+                    {
+                        slotMask |= (1 << j);
+                    }
+                }
+                chunk.ChunkVertices.VertexLayout.SlotMask = (uint)slotMask;
+
                 // Adding Chunk
                 blob.Header.RenderChunkInfos.Add(chunk);
             }
@@ -1307,6 +1345,45 @@ namespace WolvenKit.Modkit.RED4
 
             return ms;
         }
+
+        private static CUInt8 GetDataSize(Enums.GpuWrapApiVertexPackingePackingType type) =>
+            type switch
+            {
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Invalid => 0,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float1 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float2 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float3 => 12,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float4 => 16,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float16_2 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Float16_4 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UShort1 => 2,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UShort2 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UShort4 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UShort4N => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Short1 => 2,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Short2 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Short4 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Short4N => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UInt1 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UInt2 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UInt3 => 12,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UInt4 => 16,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Int1 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Int2 => 8,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Int3 => 12,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Int4 => 16,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Color => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UByte1 => 1,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UByte1F => 1,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UByte4 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_UByte4N => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Byte4N => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Dec4 => 4,
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Index16 => throw new NotImplementedException(),
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Index32 => throw new NotImplementedException(),
+                Enums.GpuWrapApiVertexPackingePackingType.PT_Max => throw new NotImplementedException(),
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
 
         private static void VerifyGLTF(ModelRoot model, GltfImportArgs args)
         {
@@ -1726,7 +1803,7 @@ namespace WolvenKit.Modkit.RED4
             }
         }
 
-        private static void UpdateGarmentSupportParameters(List<RawMeshContainer> meshes, CR2WFile cr2w, bool importGarmentSupport = false)
+        private static void UpdateGarmentSupportParameters(List<RawMeshContainer> meshes, CR2WFile cr2w, bool importGarmentSupport = true)
         {
             if (importGarmentSupport && cr2w.RootChunk is CMesh cMesh)
             {

@@ -67,6 +67,7 @@ namespace WolvenKit
                     // services
                     services.AddSingleton(typeof(ISettingsManager), SettingsManager.Load());    
                     services.AddSingleton<IHashService, HashService>();                         // can this be transient?
+                    services.AddSingleton<CRUIDService>();                                      // can this be transient?
                     services.AddSingleton<MySink>();                                            // can this be transient?
                     services.AddSingleton<ILoggerService, SerilogWrapper>();                    // can this be transient?
                     services.AddSingleton<ITweakDBService, TweakDBService>();

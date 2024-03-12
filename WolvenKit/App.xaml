@@ -7,6 +7,7 @@
     xmlns:exporters="clr-namespace:WolvenKit.Views.Exporters"
     xmlns:exportvms="clr-namespace:WolvenKit.App.ViewModels.Exporters;assembly=WolvenKit.App"
     xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:importers="clr-namespace:WolvenKit.Views.Importers"
     xmlns:importvms="clr-namespace:WolvenKit.App.ViewModels.Importers;assembly=WolvenKit.App"
     xmlns:o="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
@@ -102,6 +103,24 @@
                         <Setter Property="BorderThickness" Value="1" />
                         <Setter Property="DockPanel.Dock" Value="Right" />
                     </Style>
+
+                    <!--  Menu icon  -->
+                    <Style x:Key="ContextMenuIconStyleCodicons" TargetType="{x:Type iconPacks:PackIconCodicons}">
+                        <Setter Property="Width" Value="13" />
+                        <Setter Property="Height" Value="13" />
+                        <Setter Property="Padding" Value="0,0,0,0" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+
+                    <!--  Menu icon  -->
+                    <Style x:Key="ContextMenuIconStyleMaterial" TargetType="{x:Type iconPacks:PackIconMaterial}">
+                        <Setter Property="Width" Value="13" />
+                        <Setter Property="Height" Value="13" />
+                        <Setter Property="Padding" Value="0,0,0,0" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
                 </ResourceDictionary>
 
                 <!--  Converters  -->
@@ -193,5 +212,6 @@
             <SolidColorBrush x:Key="AccentColorBrush" Color="Black" />
 
         </ResourceDictionary>
+
     </Application.Resources>
 </Application>

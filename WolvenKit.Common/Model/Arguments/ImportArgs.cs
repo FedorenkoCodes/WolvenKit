@@ -99,6 +99,22 @@ namespace WolvenKit.Common.Model.Arguments
         private GltfImportAsFormat _importFormat = GltfImportAsFormat.Mesh;
 
         /// <summary>
+        /// Imports garment support data from GLB.
+        /// </summary>
+        [Category("Import Settings")]
+        [Display(Name = "Import Garment Support (Experimental)")]
+        [Description("If checked the Garment Support data will be imported from the mesh")]
+        public bool ImportGarmentSupport { get; set; } = true;
+
+        /// <summary>
+        /// Use object or node name as mesh name
+        /// </summary>
+        [Category("Import Settings")]
+        [Display(Name = "Use Object Name as Submesh Name (Compatibility)")]
+        [Description("If checked, each submesh name will be overridden by the node name (e.g. Blender object) to match previous behavior.")]
+        public bool OverrideMeshNameWithNodeName { get; set; } = true;
+
+        /// <summary>
         /// Should a Material.Json be imported?
         /// </summary>
         [Category("Import Settings")]
@@ -162,14 +178,6 @@ namespace WolvenKit.Common.Model.Arguments
         public bool ReplaceLod { get; set; } = false;
 
         /// <summary>
-        /// Imports garment support data from GLB.
-        /// </summary>
-        [Category("Import Settings")]
-        [Display(Name = "Import Garment Support (Experimental)")]
-        [Description("If checked the Garment Support data will be imported from the mesh")]
-        public bool ImportGarmentSupport { get; set; } = false;
-
-        /// <summary>
         /// Selected Rig for Mesh WithRig Export. ALWAYS USE THE FIRST ENTRY IN THE LIST.
         /// </summary>
         [Category("WithRig Settings")]
@@ -187,12 +195,6 @@ namespace WolvenKit.Common.Model.Arguments
         public bool KeepRig { get; set; } = false;
 
         /// <summary>
-        /// List of Archives for Morphtarget Import.
-        /// </summary>
-        [Browsable(false)]
-        public List<ICyberGameArchive> Archives { get; set; } = new();
-
-        /// <summary>
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
@@ -205,7 +207,8 @@ namespace WolvenKit.Common.Model.Arguments
         Morphtarget,
         Anims,
         MeshWithRig,
-        Rig
+        Rig,
+        PhysicalScene
     }
 
     public class MlmaskImportArgs : ImportArgs

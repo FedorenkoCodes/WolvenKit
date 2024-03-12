@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +17,7 @@ using WolvenKit.Common.FNV1A;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
+using WolvenKit.Helpers;
 using WolvenKit.Modkit.RED4;
 using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Archive.CR2W;
@@ -133,12 +135,12 @@ public partial class RedDocumentViewModel : DocumentViewModel
     [RelayCommand(CanExecute = nameof(CanExecuteNewEmbeddedFile))]
     private async Task NewEmbeddedFile()
     {
-        var existing = new ObservableCollection<string>(AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(p => p.IsAssignableTo(typeof(CResource)) && p.IsClass)
-            .Select(x => x.Name));
+        var types = FileTypeHelper.FileTypes
+            .OrderBy(x => x.Extension)
+            .Select(fileType => new TypeEntry(fileType.Extension.ToString(), fileType.Description, fileType.RootType))
+            .ToList();
 
-        await _appViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, true)
+        await _appViewModel.SetActiveDialog(new TypeSelectorDialogViewModel(types)
         {
             DialogHandler = HandleEmbeddedFile
         });
@@ -152,9 +154,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
     public override async Task Save(object? parameter)
     {
-        var tmpPath = Path.ChangeExtension(FilePath, ".tmp");
-
-        using var fs = new FileStream(tmpPath, FileMode.Create, FileAccess.ReadWrite);
+        var ms = new MemoryStream();
         var file = GetMainFile();
 
         try
@@ -162,7 +162,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             // if we're in a text view, use a normal StreamWriter, else use the CR2W one
             if (file is RDTTextViewModel textViewModel)
             {
-                using var tw = new StreamWriter(fs);
+                using var tw = new StreamWriter(ms, null, -1, true);
                 var text = textViewModel.Text;
                 tw.Write(text);
             }
@@ -171,15 +171,11 @@ public partial class RedDocumentViewModel : DocumentViewModel
                 var cr2w = Cr2wFile;
                 if (_hookService is AppHookService appHookService && !appHookService.OnSave(FilePath, ref cr2w))
                 {
-                    _loggerService.Error($"Error while processing onSave script");
-
-                    fs.Dispose();
-                    File.Delete(tmpPath);
-
+                    _loggerService.Error($"Error while processing onSave hooks");
                     return;
                 }
 
-                using var writer = new CR2WWriter(fs) { LoggerService = _loggerService };
+                using var writer = new CR2WWriter(ms, Encoding.UTF8, true) { LoggerService = _loggerService };
                 writer.WriteFile(cr2w);
             }
         }
@@ -188,17 +184,13 @@ public partial class RedDocumentViewModel : DocumentViewModel
             _loggerService.Error($"Error while saving {FilePath}");
             _loggerService.Error(e);
 
-            fs.Dispose();
-            File.Delete(tmpPath);
-
             return;
         }
 
-        if (File.Exists(FilePath))
+        if (FileHelper.SafeWrite(ms, FilePath, _loggerService))
         {
-            File.Delete(FilePath);
+            LastWriteTime = File.GetLastWriteTime(FilePath);
         }
-        File.Move(tmpPath, FilePath);
 
         SetIsDirty(false);
         _loggerService.Success($"Saved file {FilePath}");
@@ -208,6 +200,33 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
     public override void SaveAs(object parameter) => throw new NotImplementedException();
 
+    public override bool Reload(bool force)
+    {
+        if (!File.Exists(FilePath))
+        {
+            return false;
+        }
+
+        if (!force && IsDirty)
+        {
+            return false;
+        }
+
+        using var fs = File.Open(FilePath, FileMode.Open);
+        if (_parserService.TryReadRed4File(fs, out var cr2wFile))
+        {
+            Cr2wFile = cr2wFile;
+            PopulateItems();
+            
+            SetIsDirty(false);
+            LastWriteTime = File.GetLastWriteTime(FilePath);
+
+            return true;
+        }
+
+        return false;
+    }
+
     public RedDocumentTabViewModel? GetMainFile()
     {
         if (SelectedTabItemViewModel is RDTTextViewModel textVM)
@@ -215,11 +234,9 @@ public partial class RedDocumentViewModel : DocumentViewModel
             return textVM;
         }
 
-        var r = TabItemViewModels
-        .OfType<RDTDataViewModel>()
-        .Where(x => x.DocumentItemType == ERedDocumentItemType.MainFile)
-        .FirstOrDefault();
-        return r;
+        return TabItemViewModels
+            .OfType<RDTDataViewModel>()
+            .FirstOrDefault(x => x.DocumentItemType == ERedDocumentItemType.MainFile);
     }
 
     protected void AddTabForRedType(RedBaseClass cls)
@@ -295,10 +312,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
     public void PopulateItems()
     {
-        if (Cr2wFile is null)
-        {
-            return;
-        }
+        TabItemViewModels.Clear();
 
         var root = _documentTabViewmodelFactory.RDTDataViewModel(Cr2wFile.RootChunk, this, _appViewModel, _chunkViewmodelFactory);
         root.FilePath = "(root)";
@@ -310,7 +324,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             if (file.Content != null)
             {
                 var vm = _documentTabViewmodelFactory.RDTDataViewModel(file.Content, this, _appViewModel, _chunkViewmodelFactory);
-                vm.FilePath = file.FileName;
+                vm.FilePath = file.FileName.GetResolvedText()!;
                 vm.IsEmbeddedFile = true;
 
                 TabItemViewModels.Add(vm);
@@ -361,9 +375,9 @@ public partial class RedDocumentViewModel : DocumentViewModel
         }
 
         _appViewModel.CloseDialogCommand.Execute(null);
-        if (sender is not null and CreateClassDialogViewModel dvm)
+        if (sender is TypeSelectorDialogViewModel { SelectedEntry.UserData: Type selectedType })
         {
-            var instance = RedTypeManager.Create(dvm.SelectedClass.NotNull());
+            var instance = RedTypeManager.Create(selectedType);
 
             var file = new CR2WEmbedded
             {
@@ -375,7 +389,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             IsDirty = true;
 
             var vm = _documentTabViewmodelFactory.RDTDataViewModel(file.Content, this, _appViewModel, _chunkViewmodelFactory);
-            vm.FilePath = file.FileName;
+            vm.FilePath = file.FileName.GetResolvedText()!;
             vm.IsEmbeddedFile = true;
 
             TabItemViewModels.Add(vm);

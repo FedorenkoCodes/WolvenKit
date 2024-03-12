@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using WolvenKit.Common;
 using WolvenKit.Common.Conversion;
 using WolvenKit.Common.FNV1A;
@@ -10,6 +13,7 @@ using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.CR2W;
 using WolvenKit.RED4.CR2W.JSON;
+using YamlDotNet.Serialization;
 
 namespace WolvenKit.Modkit.Scripting;
 
@@ -152,17 +156,15 @@ public class ScriptFunctions
             return null;
         }
 
-        var fileEntry = _archiveManager.Archives.Items
-            .SelectMany(x => x.Files.Values)
-            .Cast<FileEntry>()
-            .FirstOrDefault(x => x.NameHash64 == hash);
-
-        if (fileEntry == null)
+        foreach (var archive in _archiveManager.Archives.Items)
         {
-            return null;
+            if (archive.Files.TryGetValue(hash, out var fileEntry))
+            {
+                return ConvertGameFile(fileEntry, openAs);
+            }
         }
 
-        return ConvertGameFile(fileEntry, openAs);
+        return null;
     }
 
     /// <summary>
@@ -178,6 +180,33 @@ public class ScriptFunctions
     /// <param name="hash">hash value to be checked</param>
     /// <returns></returns>
     public virtual bool FileExistsInArchive(ulong hash) => GetFileFromArchive(hash, OpenAs.GameFile) != null;
+
+    /// <summary>
+    /// Converts a YAML string to a JSON string
+    /// </summary>
+    /// <param name="yamlText">The YAML string to convert</param>
+    /// <returns>The converted JSON string</returns>
+    public virtual string YamlToJson(string yamlText)
+    {
+        var deserializer = new Deserializer();
+        var yamlObject = deserializer.Deserialize(yamlText);
+
+        return JsonConvert.SerializeObject(yamlObject);
+    }
+
+    /// <summary>
+    /// Converts a JSON string to a YAML string
+    /// </summary>
+    /// <param name="jsonText">The JSON string to convert</param>
+    /// <returns>The converted YAML string</returns>
+    public virtual string JsonToYaml(string jsonText)
+    {
+        var expConverter = new ExpandoObjectConverter();
+        var deserializedObject = JsonConvert.DeserializeObject<ExpandoObject>(jsonText, expConverter);
+        
+        var serializer = new Serializer();
+        return serializer.Serialize(deserializedObject);
+    }
 }
 
 public enum OpenAs

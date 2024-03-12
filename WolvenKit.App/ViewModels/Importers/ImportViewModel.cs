@@ -13,10 +13,10 @@ using WolvenKit.App.Models;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Dialogs;
 using WolvenKit.App.ViewModels.Exporters;
+using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Common;
 using WolvenKit.Common.Extensions;
-using WolvenKit.Common.Interfaces;
 using WolvenKit.Common.Model;
 using WolvenKit.Common.Model.Arguments;
 using WolvenKit.Common.Services;
@@ -30,6 +30,7 @@ namespace WolvenKit.App.ViewModels.Importers;
 
 public partial class ImportViewModel : AbstractImportViewModel
 {
+    private readonly AppViewModel _appViewModel;
     private readonly ILoggerService _loggerService;
     private readonly IWatcherService _watcherService;
     private readonly IProjectManager _projectManager;
@@ -39,6 +40,7 @@ public partial class ImportViewModel : AbstractImportViewModel
     private readonly ImportExportHelper _importExportHelper;
 
     public ImportViewModel(
+        AppViewModel appViewModel,
         IArchiveManager archiveManager, 
         INotificationService notificationService, 
         ISettingsManager settingsManager,
@@ -50,6 +52,7 @@ public partial class ImportViewModel : AbstractImportViewModel
         Red4ParserService parserService,
         ImportExportHelper importExportHelper) : base(archiveManager, notificationService, settingsManager, "Import Tool", "Import Tool")
     {
+        _appViewModel = appViewModel;
         _loggerService = loggerService;
         _watcherService = watcherService;
         _projectManager = projectManager;
@@ -89,7 +92,7 @@ public partial class ImportViewModel : AbstractImportViewModel
             }
 
             // set default settings from filename
-            item.Properties = ImportableItemViewModel.LoadXbmDefaultSettings(item.BaseFile);
+            item.SetProperties(ImportableItemViewModel.LoadXbmDefaultSettings(item.BaseFile));
             _loggerService?.Info($"Loaded settings for \"{item.Name}\": Parsed filename");
         }
     }
@@ -107,13 +110,13 @@ public partial class ImportViewModel : AbstractImportViewModel
             // import settings from vanilla
             if (ImportableItemViewModel.TryLoadXbmSettingsFromGame(item.BaseFile, _archiveManager, _projectManager, _parserService, out var args))
             {
-                item.Properties = args;
+                item.SetProperties(args);
                 _loggerService?.Info($"Loaded settings for \"{item.Name}\": Parsed game file");
             }
             else
             {
                 // fall back to default settings
-                item.Properties = ImportableItemViewModel.LoadXbmDefaultSettings(item.BaseFile);
+                item.SetProperties(ImportableItemViewModel.LoadXbmDefaultSettings(item.BaseFile));
                 _loggerService?.Warning($"Could not load settings for \"{item.Name}\" from game");
             }
         }
@@ -128,8 +131,7 @@ public partial class ImportViewModel : AbstractImportViewModel
             return;
         }
 
-        var proj = _projectManager.ActiveProject;
-        if (proj is null)
+        if (_archiveManager.ProjectArchive is not FileSystemArchive projectArchive)
         {
             _loggerService.Error("No project loaded!");
             return;
@@ -151,13 +153,12 @@ public partial class ImportViewModel : AbstractImportViewModel
         //prepare a list of failed items
         var failedItems = new List<string>();
 
-        var projectArchive = proj.AsArchive();
-
         var toBeImported = Items
             .Where(_ => all || _.IsChecked)
             .Where(x => !x.Extension.Equals(ERawFileFormat.wav.ToString()))
             .Cast<ImportableItemViewModel>()
             .ToList();
+
         total = toBeImported.Count;
         foreach (var item in toBeImported)
         {
@@ -200,6 +201,8 @@ public partial class ImportViewModel : AbstractImportViewModel
         }
 
         _progressService.Completed();
+
+        _appViewModel.ReloadChangedFiles();
     }
 
     private Task<bool> ImportWavs(List<string> wavs)
@@ -217,9 +220,7 @@ public partial class ImportViewModel : AbstractImportViewModel
 
         if (_gameController.GetController() is RED4Controller cp77Controller)
         {
-            OpusTools opusTools = new(proj.ModDirectory, proj.RawDirectory, _archiveManager, true);
-
-            return Task.Run(() => opusTools.ImportWavs(wavs.ToArray()));
+            return Task.Run(() => OpusTools.ImportWavs(_archiveManager, wavs, new DirectoryInfo(proj.RawDirectory), new DirectoryInfo(proj.ModDirectory)));
         }
 
         return Task.FromResult(false);
@@ -240,7 +241,7 @@ public partial class ImportViewModel : AbstractImportViewModel
         }
 
         var settings = new GlobalImportArgs().Register(prop);
-        if (!_importExportHelper.Finalize(prop, settings, projectArchive))
+        if (!_importExportHelper.Finalize(prop, settings))
         {
             return false;
         }

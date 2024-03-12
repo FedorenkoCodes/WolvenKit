@@ -9,27 +9,22 @@ using WolvenKit.App.Helpers;
 using WolvenKit.App.Interaction;
 using WolvenKit.App.Models;
 using WolvenKit.App.Services;
+using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Common;
-using WolvenKit.Common.Extensions;
-using WolvenKit.Common.Interfaces;
-using WolvenKit.Common.Model;
 using WolvenKit.Common.Model.Arguments;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.Core.Services;
-using WolvenKit.Helpers;
-using WolvenKit.Modkit.RED4;
 using WolvenKit.Modkit.RED4.Opus;
 using WolvenKit.RED4.Archive;
-using WolvenKit.RED4.Archive.CR2W;
-using WolvenKit.RED4.CR2W;
 
 namespace WolvenKit.App.ViewModels.Exporters;
 
 public partial class ExportViewModel : AbstractExportViewModel
 {
+    private readonly AppViewModel _appViewModel;
     private readonly ILoggerService _loggerService;
     private readonly IWatcherService _watcherService;
     private readonly IProjectManager _projectManager;
@@ -37,6 +32,7 @@ public partial class ExportViewModel : AbstractExportViewModel
     private readonly ImportExportHelper _importExportHelper;
 
     public ExportViewModel(
+        AppViewModel appViewModel,
         IArchiveManager archiveManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
@@ -46,6 +42,7 @@ public partial class ExportViewModel : AbstractExportViewModel
         IProgressService<double> progressService,
         ImportExportHelper importExportHelper) : base(archiveManager, notificationService, settingsManager, "Export Tool", "Export Tool")
     {
+        _appViewModel = appViewModel;
         _loggerService = loggerService;
         _watcherService = watcherService;
         _projectManager = projectManager;
@@ -86,7 +83,7 @@ public partial class ExportViewModel : AbstractExportViewModel
 
             if (Activator.CreateInstance(item.Properties.GetType()) is ImportExportArgs a)
             {
-                item.Properties = a;
+                item.SetProperties(a);
             }
         }
     }
@@ -95,8 +92,7 @@ public partial class ExportViewModel : AbstractExportViewModel
 
     protected override async Task ExecuteProcessBulk(bool all = false)
     {
-        var proj = _projectManager.ActiveProject;
-        if (proj == null)
+        if (_archiveManager.ProjectArchive is not FileSystemArchive projectArchive)
         {
             _loggerService.Error("No project loaded!");
             return;
@@ -113,8 +109,6 @@ public partial class ExportViewModel : AbstractExportViewModel
         //prepare a list of failed items
         var failedItems = new List<string>();
 
-        var projectArchive = proj.AsArchive();
-
         var toBeExported = Items
             .Where(_ => all || _.IsChecked)
             .Cast<ExportableItemViewModel>()
@@ -122,6 +116,7 @@ public partial class ExportViewModel : AbstractExportViewModel
         total = toBeExported.Count;
         foreach (var item in toBeExported)
         {
+            _appViewModel.SaveFile(item.BaseFile);
             if (await ExportSingleAsync(item, projectArchive))
             {
                 sucessful++;
@@ -171,7 +166,7 @@ public partial class ExportViewModel : AbstractExportViewModel
         }
 
         var settings = new GlobalExportArgs().Register(e);
-        if (!_importExportHelper.Finalize(settings, projectArchive))
+        if (!_importExportHelper.Finalize(settings))
         {
             return false;
         }
@@ -258,8 +253,13 @@ public partial class ExportViewModel : AbstractExportViewModel
         }
 
 
-        OpusTools opusTools = new(_projectManager.ActiveProject.NotNull().ModDirectory, _projectManager.ActiveProject.RawDirectory, _archiveManager, opusExportArgs.UseMod);
-        var availableItems = opusTools.Info.OpusHashes.Select(x => new CollectionItemViewModel<uint>(x));
+        var info = OpusTools.GetOpusInfo(_archiveManager, opusExportArgs.UseMod);
+        if (info == null)
+        {
+            return;
+        }
+
+        var availableItems = info.OpusHashes.Select(x => new CollectionItemViewModel<uint>(x));
 
         // open dialogue
         var result = Interactions.ShowCollectionView((availableItems, selectedItems));

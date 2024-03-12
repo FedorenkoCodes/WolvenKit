@@ -1,16 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
-using WolvenKit.Common;
-using WolvenKit.Common.Extensions;
-using WolvenKit.Common.FNV1A;
-using WolvenKit.Common.Services;
-using WolvenKit.Core.Extensions;
-using WolvenKit.Modkit.Exceptions;
+using WolvenKit.Helpers;
 using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Archive.IO;
 
@@ -28,30 +17,58 @@ namespace WolvenKit.Modkit.RED4
         /// <param name="outpath"></param>
         /// <param name="modname">Optional archivename</param>
         /// <returns></returns>
-        public Archive Pack(DirectoryInfo infolder, DirectoryInfo outpath, string? modname = null)
+        public bool Pack(DirectoryInfo infolder, DirectoryInfo outpath, string? modname = null)
         {
             if (!infolder.Exists)
             {
                 _loggerService.Error($"Could not pack archive from {infolder}");
-                throw new PackException();
+                return false;
             }
 
             if (!outpath.Exists)
             {
                 _loggerService.Error($"Could not pack archive to {outpath}");
-                throw new PackException();
+                return false;
             }
 
-            ArchiveWriter writer = new(_hashService, _loggerService);
-            
-            var archive = writer.WriteArchive(infolder, outpath, modname);
-            if (archive == null)
+            var outFile = Path.Combine(outpath.FullName, $"{infolder.Name}.archive");
+            if (modname != null)
             {
-                _loggerService.Error($"Could not pack archive");
-                throw new PackException();
+                outFile = Path.Combine(outpath.FullName, $"{modname}.archive");
+            }
+            var tmpFile = Path.ChangeExtension(outFile, "tmp");
+
+            if (!FileHelper.SafeDelete(tmpFile, _loggerService) || !FileHelper.SafeDelete(outFile, _loggerService))
+            {
+                return false;
             }
 
-            return archive;
+            bool success;
+            using (var fs = File.Create(tmpFile))
+            {
+                ArchiveWriter writer = new(_hashService, _loggerService);
+                success = writer.WriteArchive(infolder, fs);
+            }
+
+            if (!success)
+            {
+                _loggerService.Error("Could not pack archive");
+
+                FileHelper.SafeDelete(tmpFile);
+                return false;
+            }
+
+            var moveSuccess = FileHelper.SafeMove(tmpFile, outFile, _loggerService);
+            
+            FileHelper.SafeDelete(tmpFile);
+
+            if (!moveSuccess)
+            {
+                return false;
+            }
+
+            _loggerService.Success($"Finished packing {outFile}.");
+            return true;
         }
     }
 }
