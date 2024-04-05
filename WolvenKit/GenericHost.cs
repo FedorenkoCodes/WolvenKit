@@ -92,6 +92,7 @@ namespace WolvenKit
                     services.AddTransient<RED4Controller>();
                     services.AddTransient<IGameControllerFactory, GameControllerFactory>();
                     services.AddSingleton<IPluginService, PluginService>();
+                    services.AddSingleton<IModifierViewStateService, ModifierViewStateService>();
 
                     // factories
                     services.AddTransient<IPageViewModelFactory, PageViewModelFactory>();
@@ -126,6 +127,9 @@ namespace WolvenKit
 
                     services.AddTransient<InputDialogViewModel>();
                     services.AddTransient<IViewFor<InputDialogViewModel>, InputDialogView>();
+
+                    services.AddTransient<SearchAndReplaceDialogViewModel>();
+                    services.AddTransient<IViewFor<SearchAndReplaceDialogViewModel>, SearchAndReplaceDialog>();
 
                     services.AddTransient<RenameDialogViewModel>();
                     services.AddTransient<IViewFor<RenameDialogViewModel>, RenameDialog>();
@@ -202,20 +206,11 @@ namespace WolvenKit
                     services.AddTransient<HomePageViewModel>();
                     services.AddTransient<IViewFor<HomePageViewModel>, HomePageView>();
 
-                    services.AddTransient<GithubPageViewModel>();
-                    services.AddTransient<IViewFor<GithubPageViewModel>, GithubPageView>();
-
                     services.AddTransient<SettingsPageViewModel>();
                     services.AddTransient<IViewFor<SettingsPageViewModel>, SettingsPageView>();
 
-                    services.AddTransient<WebsitePageViewModel>();
-                    services.AddTransient<IViewFor<WebsitePageViewModel>, WebsitePageView>();
-
                     services.AddTransient<WelcomePageViewModel>();
                     services.AddTransient<IViewFor<WelcomePageViewModel>, WelcomePageView>();
-
-                    services.AddTransient<WikiPageViewModel>();
-                    services.AddTransient<IViewFor<WikiPageViewModel>, WikiPageView>();
 
                     services.AddTransient<ModsViewModel>();
                     services.AddTransient<IViewFor<ModsViewModel>, ModsView>();

@@ -128,7 +128,12 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 
     private async void AddClass()
     {
-        var existing = new ObservableCollection<string>(AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => RedPropertyInfo.InnerType!.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract).Select(x => RedReflection.GetTypeRedName(x)!));
+        var existing = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(p => RedPropertyInfo.InnerType!.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
+            .Select(x => new TypeEntry(x.Name, "", x))
+            .ToList();
+        
         if (existing.Count == 0)
         {
             throw new Exception();
@@ -136,7 +141,7 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 
         if (existing.Count == 1)
         {
-            var data = RedTypeManager.Create(existing[0]);
+            var data = RedTypeManager.Create((Type)existing[0].UserData!);
             _data!.Add(data);
 
             var item = AddItem(Properties.Count, data, null, true);
@@ -147,15 +152,15 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
 
         if (existing.Count > 1)
         {
-            await RedTypeHelper.GetAppViewModel().SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+            await RedTypeHelper.GetAppViewModel().SetActiveDialog(new TypeSelectorDialogViewModel(existing)
             {
                 DialogHandler = (model =>
                 {
                     RedTypeHelper.GetAppViewModel().CloseDialogCommand.Execute(null);
-                    if (model is CreateClassDialogViewModel createClassDialogViewModel &&
-                        !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
+
+                    if (model is TypeSelectorDialogViewModel { SelectedEntry.UserData: Type selectedType })
                     {
-                        var data = RedTypeManager.Create(createClassDialogViewModel.SelectedClass);
+                        var data = RedTypeManager.Create(selectedType);
                         _data!.Add(data);
 
                         var item = AddItem(Properties.Count, data, null, true);

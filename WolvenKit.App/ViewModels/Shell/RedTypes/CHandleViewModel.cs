@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using WolvenKit.App.ViewModels.Dialogs;
+using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -96,7 +97,12 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 
     private async void SetClass()
     {
-        var existing = new ObservableCollection<string>(AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => RedPropertyInfo.InnerType!.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract).Select(x => x.Name));
+        var existing = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(p => RedPropertyInfo.InnerType!.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract)
+            .Select(x => new TypeEntry(x.Name, "", x))
+            .ToList();
+
         if (existing.Count == 0)
         {
             throw new Exception();
@@ -109,7 +115,7 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 
         if (existing.Count == 1)
         {
-            _data!.SetValue(RedTypeManager.Create(existing[0]));
+            _data!.SetValue(RedTypeManager.Create((Type)existing[0].UserData!));
             Refresh(true);
         }
 
@@ -117,15 +123,15 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         {
             var appViewModel = RedTypeHelper.GetAppViewModel();
 
-            await appViewModel.SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+            await appViewModel.SetActiveDialog(new TypeSelectorDialogViewModel(existing)
             {
                 DialogHandler = (model =>
                 {
                     appViewModel.CloseDialogCommand.Execute(null);
-                    if (model is CreateClassDialogViewModel createClassDialogViewModel &&
-                        !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
+
+                    if (model is TypeSelectorDialogViewModel { SelectedEntry.UserData: Type selectedType })
                     {
-                        _data!.SetValue(RedTypeManager.Create(createClassDialogViewModel.SelectedClass));
+                        _data!.SetValue(RedTypeManager.Create(selectedType));
                         Refresh(true);
                     }
                 })

@@ -84,31 +84,35 @@ public class CDictionaryViewModel : CArrayViewModel
 
     private async void AddClass()
     {
-        var existing = new ObservableCollection<string>
+        var existing = new List<TypeEntry>
         {
-            "Color",
-            "CFloat",
-            "CName",
-            "Vector4",
-            "rRef:ITexture",
-            "rRef:CFoliageProfile",
-            "rRef:CGradient",
-            "rRef:CHairProfile",
-            "rRef:Multilayer_Mask",
-            "rRef:Multilayer_Setup",
-            "rRef:CSkinProfile",
-            "rRef:CTerrainSetup",
+            new("Color", "Color description", typeof(CColor)),
+            new("CpuNameU64", "", typeof(CName)),
+            new("Cube", "Reference to cube xbm", typeof(CResourceReference<ITexture>)),
+            new("DynamicTexture", "Reference to dtex file", typeof(CResourceReference<ITexture>)),
+            new("FoliageParameters", "Reference to fp file", typeof(CResourceReference<CFoliageProfile>)),
+            new("Gradient", "Reference to gradient file", typeof(CResourceReference<CGradient>)),
+            new("HairParameters", "Reference to hp file", typeof(CResourceReference<CHairProfile>)),
+            new("MultilayerMask", "Reference to mlmask file", typeof(CResourceReference<Multilayer_Mask>)),
+            new("MultilayerSetup", "Reference to mlsetup file", typeof(CResourceReference<Multilayer_Setup>)),
+            new("Scalar", "", typeof(CFloat)),
+            new("SkinParameters", "Reference to sp file", typeof(CResourceReference<CSkinProfile>)),
+            //new("StructBuffer", "", null), // still not sure what this does
+            new("TerrainSetup", "Reference to terrainsetup file", typeof(CResourceReference<CTerrainSetup>)),
+            new("Texture", "Reference to xbm file", typeof(CResourceReference<ITexture>)),
+            new("TextureArray", "Reference to texarray file", typeof(CResourceReference<ITexture>)),
+            new("Vector", "", typeof(Vector4)),
         };
 
-        await RedTypeHelper.GetAppViewModel().SetActiveDialog(new CreateClassDialogViewModel(existing, false)
+        await RedTypeHelper.GetAppViewModel().SetActiveDialog(new TypeSelectorDialogViewModel(existing)
         {
             DialogHandler = (model =>
             {
                 RedTypeHelper.GetAppViewModel().CloseDialogCommand.Execute(null);
-                if (model is CreateClassDialogViewModel createClassDialogViewModel &&
-                    !string.IsNullOrEmpty(createClassDialogViewModel.SelectedClass))
+
+                if (model is TypeSelectorDialogViewModel { SelectedEntry.UserData: Type selectedType })
                 {
-                    _data!.Add(new CKeyValuePair(CName.Empty, RedTypeManager.CreateRedType(createClassDialogViewModel.SelectedClass)));
+                    _data!.Add(new CKeyValuePair(CName.Empty, RedTypeManager.CreateRedType(selectedType)));
                     Refresh(true);
                 }
             })

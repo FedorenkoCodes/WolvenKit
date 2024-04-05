@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
+using DynamicData;
 using SharpGLTF.Validation;
 using WolvenKit.RED4.Archive;
 using static WolvenKit.RED4.Types.Enums;
@@ -88,7 +91,31 @@ namespace WolvenKit.Common.Model.Arguments
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
-        public override string ToString() => TextureGroup.ToString();
+        public override string ToString()
+        {
+            List<string> stringArgs = [];
+            stringArgs.Add(TextureGroup.ToString().Replace("TEXG_", ""));
+
+            if (PremultiplyAlpha)
+            {
+                stringArgs.Add("premultiplyAlpha: true");
+            }
+
+            if (IsGamma)
+            {
+                stringArgs.Add("isGamma: true");
+            }
+
+            if (GenerateMipMaps)
+            {
+                stringArgs.Add("mipMaps: true");
+            }
+
+            stringArgs.Add($"Compression: {Compression.ToString()}");
+            stringArgs.Add($"raw format: {RawFormat.ToString()}");
+
+            return string.Join(" | ", stringArgs);
+        }
     }
 
     /// <summary>
@@ -109,10 +136,18 @@ namespace WolvenKit.Common.Model.Arguments
         /// <summary>
         /// Use object or node name as mesh name
         /// </summary>
-        [Category("Import Settings")]
-        [Display(Name = "Use Object Name as Submesh Name (Compatibility)")]
+        [Category("Compatibility Settings")]
+        [Display(Name = "Use Object Name as Submesh Name")]
         [Description("If checked, each submesh name will be overridden by the node name (e.g. Blender object) to match previous behavior.")]
         public bool OverrideMeshNameWithNodeName { get; set; } = true;
+
+        /// <summary>
+        /// Strip Bind Pose transform from additive animations
+        /// </summary>
+        [Category("Animation Settings")]
+        [Display(Name = "Strip Local Transform from Additives")]
+        [Description("Only uncheck if your additive animations don't include joint's Local Transform (export selection) or you're certain you know what you're doing.")]
+        public bool AdditiveStripLocalTransform { get; set; } = true;
 
         /// <summary>
         /// Should a Material.Json be imported?
@@ -198,7 +233,44 @@ namespace WolvenKit.Common.Model.Arguments
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
-        public override string ToString() => $"Mesh/Morphtarget | Import Format :  {ImportFormat}";
+        public override string ToString()
+        {
+            var stringParts = new List<string>();
+            switch (ImportFormat)
+            {
+                case GltfImportAsFormat.Anims:
+                    stringParts.Add("Animation");
+                    break;
+                case GltfImportAsFormat.Morphtarget:
+                    stringParts.Add("Morphtarget");
+                    break;
+                case GltfImportAsFormat.Rig:
+                    stringParts.Add("Armature");
+                    break;
+                case GltfImportAsFormat.PhysicalScene:
+                default:
+                case GltfImportAsFormat.MeshWithRig:
+                case GltfImportAsFormat.Mesh:
+                    stringParts.Add("Mesh");
+                    break;
+            }
+
+            if (ImportMaterials)
+            {
+                stringParts.Add("material: true");
+            }
+            else if (ImportMaterialOnly)
+            {
+                stringParts.Add("only material");
+            }
+
+            if (ImportGarmentSupport)
+            {
+                stringParts.Add("garmentSupport: true");
+            }
+
+            return string.Join(" | ", stringParts);
+        } 
     }
 
     public enum GltfImportAsFormat

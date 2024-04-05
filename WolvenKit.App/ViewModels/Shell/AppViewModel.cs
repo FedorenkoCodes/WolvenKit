@@ -234,6 +234,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
 
         CheckForUpdatesCommand.SafeExecute(true);
         CheckForScriptUpdatesCommand.SafeExecute();
+        CheckForLongPathSupport();
     }
 
     public bool AddDockedPane(string paneString)
@@ -336,6 +337,21 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         {
             var setupWasOk = Interactions.ShowFirstTimeSetup();
         }
+    }
+
+    private void CheckForLongPathSupport()
+    {
+        if (Core.NativeMethods.RtlAreLongPathsEnabled() != 0)
+        {
+            return;
+        }
+
+        var text = "Long path support is disabled in your OS!" + Environment.NewLine +
+                   "Please do so to ensure that WolvenKit works properly." + Environment.NewLine + Environment.NewLine +
+                   "For more informations:" + Environment.NewLine +
+                   "https://wiki.redmodding.org/wolvenkit/help/faq/long-file-path-support";
+
+        DispatcherHelper.RunOnMainThread(() => Interactions.ShowConfirmation((text, "Long path support", WMessageBoxImage.Warning, WMessageBoxButtons.Ok)));
     }
 
     #endregion init
@@ -1036,6 +1052,15 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
                 }
             }
         }
+    }
+
+    public bool ShowConfirmationDialog(string dialogMessage, string dialogTitle = "")
+    {
+        var result = Interactions.ShowConfirmation((dialogMessage, dialogTitle,
+            WMessageBoxImage.Question,
+            WMessageBoxButtons.YesNo));
+
+        return result == WMessageBoxResult.Yes;
     }
 
     public void ReloadChangedFiles()

@@ -34,6 +34,7 @@ using WolvenKit.Common;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
+using WolvenKit.Core.Services;
 using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Archive.Buffer;
 using WolvenKit.RED4.Archive.CR2W;
@@ -44,6 +45,7 @@ using YamlDotNet.Serialization;
 using static WolvenKit.App.ViewModels.Dialogs.DialogViewModel;
 using static WolvenKit.RED4.Types.RedReflection;
 using CKeyValuePair = WolvenKit.RED4.Types.CKeyValuePair;
+using IRedArray = WolvenKit.RED4.Types.IRedArray;
 using IRedString = WolvenKit.RED4.Types.IRedString;
 using Mat4 = System.Numerics.Matrix4x4;
 using Quat = System.Numerics.Quaternion;
@@ -67,6 +69,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
     private readonly ILocKeyService _locKeyService;
     private readonly Red4ParserService _parserService;
     private readonly CRUIDService _cruidService;
+    private readonly IModifierViewStateService _modifierViewStateService;
 
     private static readonly List<string> s_hiddenProperties = new() 
     { 
@@ -102,6 +105,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         IArchiveManager archiveManager,
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
+        IModifierViewStateService modifierViewStateService,
         Red4ParserService parserService,
         CRUIDService cruidService,
         ChunkViewModel? parent = null,
@@ -120,19 +124,19 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         _locKeyService = locKeyService;
         _parserService = parserService;
         _cruidService = cruidService;
+        _modifierViewStateService = modifierViewStateService;
 
         _appViewModel = appViewModel;
         _data = data;
         Parent = parent;
         _propertyName = name;
         IsReadOnly = isReadOnly;
-
+        
         // If the parent is an array, the numeric index will be passed as property name 
         if (IsInArray && int.TryParse(name, out var arrayIndex))
         {
             NodeIdxInParent = arrayIndex;
         }
-            
 
         SelfList = new ObservableCollectionExtended<ChunkViewModel>(new[] { this });
 
@@ -160,19 +164,21 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         IArchiveManager archiveManager,
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
+        IModifierViewStateService modifierViewStateService,
         Red4ParserService parserService,
         CRUIDService cruidService,
         bool isReadOnly = false
         ) 
         : this(data, nameof(RDTDataViewModel), appViewModel,
             chunkViewmodelFactory, tabViewmodelFactory, hashService, loggerService, projectManager,
-            gameController, settingsManager, archiveManager, tweakDbService, locKeyService, parserService, cruidService, null,
+            gameController, settingsManager, archiveManager, tweakDbService, locKeyService, modifierViewStateService, parserService, cruidService, null,
             isReadOnly
               )
     {
         _tab = tab;
         RelativePath = _tab.Parent.RelativePath;
         IsExpanded = true;
+        
         //Data = export;
         //if (!PropertiesLoaded)
         //{
@@ -195,13 +201,14 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         IArchiveManager archiveManager,
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
+        IModifierViewStateService modifierViewStateService,
         Red4ParserService parserService,
         CRUIDService cruidService,
         bool isReadOnly = false
         ) 
         : this(export, nameof(ReferenceSocket), appViewModel,
               chunkViewmodelFactory, tabViewmodelFactory, hashService, loggerService, projectManager,
-              gameController, settingsManager, archiveManager, tweakDbService, locKeyService, parserService, cruidService, null, isReadOnly
+              gameController, settingsManager, archiveManager, tweakDbService, locKeyService, modifierViewStateService, parserService, cruidService, null, isReadOnly
               )
     {
         Socket = socket;
@@ -224,7 +231,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             CalculateProperties();
         }
 
-        if (IsShiftBeingHeld)
+        if (_modifierViewStateService.GetModifierState(ModifierKeys.Shift))
         {
             SetChildExpansionStates(IsExpanded);
         }
@@ -350,6 +357,11 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         {
             Parent.Parent?.CalculateValue();
         }
+        else if (Data is WorldPosition && Parent.Data is WorldTransform)
+
+        {
+            Parent.CalculateDescriptor();
+        }
 
 
         if (Parent.IsValueExtrapolated)
@@ -396,7 +408,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     // For view decoration. Extrapolated values will be darker.
     [ObservableProperty] private bool _isValueExtrapolated;
-
+    
     [ObservableProperty]
     //[NotifyCanExecuteChangedFor(nameof(OpenRefCommand))]
     //[NotifyCanExecuteChangedFor(nameof(AddRefCommand))]
@@ -433,7 +445,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     public bool ShouldShowTweakXLMenu => Data is gamedataTweakDBRecord || Data is TweakDBID || Parent?.Data is gamedataTweakDBRecord || Parent?.Data is TweakDBID;
 
-    public bool ShouldShowHandleOperations => PropertyType.IsAssignableTo(typeof(IRedBaseHandle));
+    public bool ShouldShowHandleOperations => PropertyType.IsAssignableTo(typeof(IRedBaseHandle)) && !IsArray;
 
     public bool ShouldShowDynamicClassOperations => ResolvedData is IDynamicClass;
 
@@ -445,32 +457,11 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
     public int[] SelectedNodeIndices =>
         Properties.Where((x) => x.IsSelected).Select((x) => x.NodeIdxInParent).Where((x) => x > -1).ToArray();
 
-    // If shift is not being held and we're a CMeshMaterialEntry or a WorldCompiledEffectPlacemenentInfo, 
-    // show "Duplicate as new item" instead of "Duplicate Selection" 
-    public bool ShouldShowDuplicateAsNew =>
-        IsInArray && !IsShiftBeingHeld && ResolvedData is worldCompiledEffectPlacementInfo ||
-        ResolvedData is CMeshMaterialEntry;
-
-    public bool ShouldShowDuplicate => IsInArray && !ShouldShowDuplicateAsNew;
-
-    // When shift is not held, paste into array
-    public bool ShouldShowPasteIntoArray => ShouldShowArrayOps && !IsShiftBeingHeld;
-
-    // When shift is being held, overwrite array with selection
-    public bool ShouldShowOverwriteArray => ShouldShowArrayOps && IsShiftBeingHeld;
-
     // For arrays of indexables, allow renumbering index properties (e.g. for materialDefinitions)
     // to get rid of duplicates and have all the ducks in a row
     public bool ShouldShowRenumberArrayIndexProperties =>
         IsArray && ResolvedData is CArray<CMeshMaterialEntry> or CArray<worldCompiledEffectPlacementInfo>;
 
-    // Shift: recursively fold/unfold child nodes
-    private protected static bool IsShiftBeingHeld =>
-        Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-
-    // Shift+Control: recursively fold/unfold nodes all the way
-    public static bool IsControlBeingHeld => Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-    
     public IRedArray? ArraySelfOrParent => Parent?.ResolvedData is IRedArray ira ? ira : ResolvedData as IRedArray;
 
     public RDTDataViewModel? Tab => _tab ?? Parent?.Tab;
@@ -654,9 +645,12 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     public string ResolvedType => ResolvedPropertyType is not null ? GetTypeRedName(ResolvedPropertyType) ?? ResolvedPropertyType.Name : "";
 
-    public bool TypesDiffer => PropertyType != ResolvedPropertyType || IsValueExtrapolated;
+    // Controls if value text is being displayed or not
+    public bool TypesDiffer => PropertyType != ResolvedPropertyType;
 
     public bool IsInArray => Parent is not null && Parent.IsArray;
+
+    public bool HasValue => !IsValueExtrapolated && Value is not null && Value != "" && Value.ToLower() != "none";
 
     public bool IsArray =>(PropertyType.IsAssignableTo(typeof(IRedArray)) ||
                 ResolvedPropertyType is not null && ResolvedPropertyType.IsAssignableTo(typeof(IList)) ||
@@ -993,6 +987,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         return yaml;
     }
 
+    
     [RelayCommand]
     private void CopyTXLOverride()
     {
@@ -1000,6 +995,15 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         if (!string.IsNullOrEmpty(yaml))
         {
             Clipboard.SetDataObject(yaml);
+        }
+    }
+
+    [RelayCommand]
+    private void CopyTXLOverrideName()
+    {
+        if (GetTXL()?.ID.GetResolvedText() is string str && str != "")
+        {
+            Clipboard.SetDataObject(str);
         }
     }
 
@@ -1278,6 +1282,86 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             vc.AppearanceDependency = list;
             RecalculateProperties();
         }
+    }
+
+
+    private bool CanDeleteUnusedMaterials() => ResolvedData is CMesh;
+
+    [RelayCommand(CanExecute = nameof(CanDeleteUnusedMaterials))]
+    private void DeleteUnusedMaterials()
+    {
+        if (ResolvedData is not CMesh mesh)
+        {
+            return;
+        }
+
+        // Collect material names from appearance chunk materials
+        var appearanceNames = mesh.Appearances
+            .Select((handle) => handle.GetValue() as meshMeshAppearance).Where((i) => i != null)
+            .SelectMany(mA => mA!.ChunkMaterials.Select(chunkMaterial => chunkMaterial.GetResolvedText()).ToArray())
+            .ToList();
+
+        var localMatIdxList = mesh.MaterialEntries.Where((mE) =>
+            mE.IsLocalInstance && mE.Name.GetResolvedText() is string s && appearanceNames.Contains(s)
+        ).Select(me => (int)me.Index).ToList();
+
+        var externalMatIdxList = mesh.MaterialEntries.Where((mE) =>
+            !mE.IsLocalInstance && mE.Name.GetResolvedText() is string s && appearanceNames.Contains(s)
+        ).Select(me => (int)me.Index).ToList();
+
+        var numUnusedMaterials = mesh.MaterialEntries.Count - (localMatIdxList.Count + externalMatIdxList.Count);
+
+        if (numUnusedMaterials == 0)
+        {
+            _loggerService.Info("No unused materials in current mesh. Yay!");
+            return;
+        }
+
+
+        var keepLocal = mesh.LocalMaterialBuffer.Materials
+            .Where((material, i) => localMatIdxList.Contains(i)).ToArray();
+
+        var keepExternal = mesh.ExternalMaterials
+            .Where((material, i) => externalMatIdxList.Contains(i)).ToArray();
+
+        var usedMaterialDefinitions = mesh.MaterialEntries.Where(me =>
+            (me.IsLocalInstance && localMatIdxList.Contains(me.Index)) ||
+            (!me.IsLocalInstance && externalMatIdxList.Contains(me.Index))
+        ).ToArray();
+
+
+        if (keepLocal.Length + keepExternal.Length != usedMaterialDefinitions.Length &&
+            !_appViewModel.ShowConfirmationDialog("Not all remaining materials match up. Continue? (You need to validate by hand)",
+                "Really delete materials?"))
+        {
+            return;
+        }
+
+        mesh.LocalMaterialBuffer.Materials.Clear();
+        foreach (var t in keepLocal)
+        {
+            mesh.LocalMaterialBuffer.Materials.Add(t);
+        }
+
+        mesh.ExternalMaterials.Clear();
+        foreach (var t in keepExternal)
+        {
+            mesh.ExternalMaterials.Add(t);
+        }
+
+        mesh.MaterialEntries.Clear();
+        for (var i = 0; i < usedMaterialDefinitions.Length; i++)
+        {
+            var t = usedMaterialDefinitions[i];
+            t.Index = (CUInt16)i;
+            mesh.MaterialEntries.Add(t);
+        }
+
+        RecalculateProperties();
+
+        Tab?.Parent.SetIsDirty(true);
+
+        _loggerService.Info($"Deleted {numUnusedMaterials} unused materials.");
     }
 
 
@@ -1637,7 +1721,11 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             }
         }
         catch (Exception ex) { _loggerService.Error(ex); }
+    }
 
+    public bool SearchAndReplace(string searchText, string replaceText, bool ignoreCase)
+    {
+        return SearchAndReplaceInProperties(searchText, replaceText, ignoreCase);
     }
 
     private bool CanCopyHandle() => Data is IRedBaseHandle;   // TODO RelayCommand check notify
@@ -1735,6 +1823,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         try
         {
             RedDocumentTabViewModel.CopiedChunk = Data is IRedCloneable irc ? (IRedType)irc.DeepCopy() : Data;
+            RefreshContextMenuFlags();
         }
         catch (Exception ex) { _loggerService.Error(ex); }
     }
@@ -1811,13 +1900,19 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         CalculateDescriptor();
         CalculateValue();
     }
-    
-    
+
     [RelayCommand(CanExecute = nameof(CanPasteChunks))]
     private void ClearAndPasteChunk()
     {
+        var isExpanded = IsExpanded;
         DeleteAll();
         PasteChunk();
+        if (!IsCtrlKeyPressed)
+        {
+            SetChildExpansionStates(false);
+        }
+
+        IsExpanded = isExpanded;
     }
     
     [RelayCommand(CanExecute = nameof(CanPasteChunks))]
@@ -1857,6 +1952,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 if (clone is IRedType redtype)
                 {
                     InsertChild(-1, redtype);
+                    RecalculateProperties();
                 }
             }
             else if (Parent != null && Parent.ResolvedData is IRedArray)
@@ -1865,11 +1961,13 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 if (clone is IRedType redtype)
                 {
                     Parent.InsertChild(Parent.GetIndexOf(this) + 1, redtype);
+                    Parent?.RecalculateProperties();
                 }
+
+                Parent?.RecalculateProperties();
             }
 
             Tab?.Parent.SetIsDirty(true);
-            Parent?.RecalculateProperties();
         }
         catch (Exception ex)
         { 
@@ -1999,7 +2097,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             Properties[i].NodeIdxInParent = i;
         }
     }
-
+    
     private bool CanCopySelection() => IsInArray && Parent is not null;   // TODO RelayCommand check notify
     [RelayCommand(CanExecute = nameof(CanCopySelection))]
     private void CopySelection()
@@ -2198,509 +2296,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
     #endregion
 
     #region methods
-
-    [MemberNotNull(nameof(Value))]
-    private void CalculateValue()
-    {
-        Value = "";
-
-        if (Data is null)
-        {
-            Value = "null";
-        }
-        if (PropertyType.IsAssignableTo(typeof(IRedString)) && Data is IRedString s)
-        {
-            var value = s.GetString();
-            if (!string.IsNullOrEmpty(value))
-            {
-                Value = value;
-                if (Value.StartsWith("LocKey#") && ulong.TryParse(Value[7..], out var key))
-                {
-                    Value = "";
-                }
-            }
-        }
-        else if (PropertyType.IsAssignableTo(typeof(CByteArray)) && Data is CByteArray b)
-        {
-            var ba = (byte[])b;
-            Value = string.Join(" ", ba.Select(x => $"{x:X2}"));
-        }
-        else if (PropertyType.IsAssignableTo(typeof(LocalizationString)) && Data is LocalizationString l)
-        {
-            var value = l;
-            Value = value.Value is "" or null ? "null" : value.Value;
-        }
-        else if (PropertyType.IsAssignableTo(typeof(IRedEnum)) && Data is IRedEnum e)
-        {
-            var value = e;
-            Value = value.ToEnumString();
-        }
-        else if (PropertyType.IsAssignableTo(typeof(IRedBitField)) && Data is IRedBitField f)
-        {
-            var value = f;
-            Value = value.ToBitFieldString();
-        }
-        else if (ResolvedData is CKeyValuePair kvp)
-        {
-            // If the CValuePair has a value, we'll try to resolve it
-            Value = kvp.Value switch
-            {
-                CName cname => cname.GetResolvedText() ?? "",
-                CResourceReference<ITexture> reference => reference.DepotPath.GetResolvedText() ?? "",
-                _ => kvp.Value.ToString()
-            };
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is meshMeshAppearance { ChunkMaterials: not null } appearance)
-        {
-            Value = string.Join(", ", appearance.ChunkMaterials);
-            Value = $"[{appearance.ChunkMaterials.Count}] {Value}";
-            IsValueExtrapolated = true;
-        }
-        // Material instance (mesh): "[2] - engine\materials\multilayered.mt" (show #keyValuePairs)
-        else if (ResolvedData is CMaterialInstance { BaseMaterial: { } cResourceReference } material)
-        {
-            var numMaterials = $"[{material.Values?.Count ?? 0}] - ";
-            Value = $"{numMaterials}{cResourceReference.DepotPath.GetResolvedText() ?? "none"}";
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is CResourceAsyncReference<IMaterial> materialRef)
-        {
-            Value = materialRef.DepotPath.GetResolvedText();
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is workWorkEntryId id)
-        {
-            Value = $"{id.Id}";
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is workWorkspotAnimsetEntry animsetEntry)
-        {
-            Value = $"{animsetEntry.Rig.DepotPath.GetResolvedText() ?? "none"}";
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is CMeshMaterialEntry materialDefinition)
-        {
-            Value = materialDefinition.IsLocalInstance ? "" : " (external)";
-            Value = $"{materialDefinition.Index}{Value}";
-            IsValueExtrapolated = true;
-        }
-        else if (NodeIdxInParent > -1 && ResolvedData is physicsRagdollBodyInfo &&
-                 GetRootModel().GetModelFromPath("ragdollNames")?.ResolvedData is CArray<physicsRagdollBodyNames>
-                     ragdollNames)
-        {
-            var ragdollName = ragdollNames[NodeIdxInParent];
-            Value =
-                $"{ragdollName.ParentAnimName.GetResolvedText() ?? ""} -> {ragdollName.ChildAnimName.GetResolvedText() ?? ""}";
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is animRigRetarget retarget)
-        {
-            Value = $"{retarget.SourceRig}";
-            IsValueExtrapolated = true;
-        }
-        else if (ResolvedData is redTagList list)
-        {
-            Value = $"[ {string.Join(", ", list.Tags.ToList().Select(t => t.GetResolvedText() ?? "").ToArray())} ]";
-            IsValueExtrapolated = true;
-        }
-        else if (NodeIdxInParent > -1 && Parent?.Name == "referenceTracks" &&
-                 GetRootModel().GetModelFromPath("trackNames")?.ResolvedData is CArray<CName> trackNames)
-        {
-            Value = trackNames[NodeIdxInParent].GetResolvedText();
-            IsValueExtrapolated = true;
-        }
-        //else if (PropertyType.IsAssignableTo(typeof(TweakDBID)))
-        //{
-        //    Value = (TweakDBID)Data.ToString();
-        //    //Value = Locator.Current.GetService<TweakDBService>().GetString(value);
-        //}
-        else if (PropertyType.IsAssignableTo(typeof(CBool)) && Data is CBool cb)
-        {
-            var value = cb;
-            Value = value ? "True" : "False";
-        }
-        else if (PropertyType.IsAssignableTo(typeof(CRUID)) && Data is CRUID cr)
-        {
-            var value = cr;
-            Value = ((ulong)value).ToString();
-        }
-        else if (PropertyType.IsAssignableTo(typeof(CUInt64)) && Data is CUInt64 uInt64)
-        {
-            var value = uInt64;
-            Value = value != 0 ? ((NodeRef)(ulong)value).ToString() : ((ulong)value).ToString();
-        }
-        else if (PropertyType.IsAssignableTo(typeof(gamedataLocKeyWrapper)))
-        {
-            //var value = (gamedataLocKeyWrapper)Data;
-            //Value = ((ulong)value).ToString();
-            //Value = Locator.Current.GetService<LocKeyService>().GetFemaleVariant(value);
-        }
-        else if (PropertyType.IsAssignableTo(typeof(IRedInteger)) && Data is IRedInteger i)
-        {
-            var value = i;
-
-            Value = value.ToString(CultureInfo.CurrentCulture);
-        }
-        else if (PropertyType.IsAssignableTo(typeof(FixedPoint)) && Data is FixedPoint fp)
-        {
-            var value = fp;
-            Value = ((float)value).ToString("G9");
-        }
-        else if (PropertyType.IsAssignableTo(typeof(NodeRef)) && Data is NodeRef nr)
-        {
-            var value = nr;
-            Value = value;
-        }
-        else if (PropertyType.IsAssignableTo(typeof(IRedRef)) && Data is IRedRef rr)
-        {
-            // if a path is resolved in the file, but is not yet added to the list of known hashes, add it
-            var depotPath = rr.DepotPath;
-            if (!_hashService.Contains(depotPath) && !ResourcePath.IsNullOrEmpty(depotPath))
-            {
-                _hashService.AddCustom(depotPath.GetResolvedText() ?? "");
-            }
-
-            if (depotPath.IsResolvable)
-            {
-                Value = depotPath.GetResolvedText().NotNull();
-            }
-            else
-            {
-                Value = depotPath == ResourcePath.Empty ? "null" : $"{(ulong)depotPath}{_hashService.GetGuessedExtension(depotPath)}";
-            }
-        }
-        else if (Data is IBrowsableType ibt)
-        {
-            Value = ibt.GetBrowsableValue();
-        }
-        else if (ResolvedData is animPoseLink link)
-        {
-            if (link.Node is not null)
-            {
-                var desc = GetNodeName(link.Node);
-
-                if (!string.IsNullOrEmpty(desc))
-                {
-                    Value = desc;
-                    IsValueExtrapolated = true;
-                    return;
-                }
-            }
-        }
-        
-        // factory.csv
-        else if (Parent is { Name: "compiledData" } && GetRootModel().Data is C2dArray &&
-                 Data is CArray<CString> { Count: 3 } ary)
-        {
-            IsValueExtrapolated = true;
-            Value = ary[1];
-        }
-        // i18n.json
-        else if (Data is localizationPersistenceOnScreenEntry i18n)
-        {
-            IsValueExtrapolated = true;
-            // fall back to male variant only if female variant is
-            Value = i18n.FemaleVariant;
-            if (Value == "" && i18n.MaleVariant != "")
-            {
-                Value = i18n.MaleVariant;
-            }
-        } 
-      
-        if (Value is null)
-        {
-            Value = "null";
-        }
-
-    }
-    
-    public void CalculateDescriptor()
-    {
-        Descriptor = "";
-
-        if (Data is worldNodeData sst && Tab is RDTDataViewModel dvm && dvm.Chunks[0].Data is worldStreamingSector wss && sst.NodeIndex < wss.Nodes.Count)
-        {
-            Descriptor = $"[{sst.NodeIndex}] {wss.Nodes[sst.NodeIndex].NotNull().Chunk.NotNull().DebugName}";
-            return;
-        }
-
-        if (Data is worldStreamingSectorDescriptor wssd)
-        {
-            Descriptor = (wssd.Data.DepotPath.GetResolvedText() ?? "")
-                .Replace("base\\worlds\\03_night_city\\_compiled\\default\\", "").Replace(".streamingsector", "");
-            return;
-        }
-
-        if (ResolvedData is IRedArray ary && ary.Count > 0)
-        {
-            // csv files and the like 
-            if (Parent is { Name: "compiledData" } && GetRootModel().Data is C2dArray csv)
-            {
-                var index = 0;
-                for (var i = 0; i < csv.CompiledHeaders.Count; i++)
-                {
-                    if (((string)csv.CompiledHeaders[i]).Contains("name", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                Descriptor = $"{ary[index]}";
-                if (Descriptor != "")
-                {
-                    return;
-                }
-            }
-
-            Descriptor = $"[{ary.Count}]";
-        }
-        else if (ResolvedData is appearanceAppearancePart)
-        {
-            Descriptor = ((appearanceAppearancePart)ResolvedData).Resource.DepotPath.GetResolvedText() ?? "";
-            if (Descriptor != "")
-            {
-                return;
-            }
-        }
-        else if (ResolvedData is animAnimSetEntry)
-        {
-            var animation = ((animAnimSetEntry)ResolvedData).Animation?.GetValue();
-            Descriptor = animation?.GetProperty("Name")?.ToString() ?? "";
-            if (Descriptor != "")
-            {
-                return;
-            }
-        }
-        // animgraph - something is broken here. Why does the orange text go away? Why do I need the try/catch
-        // around the GetNodename?
-        else if (Data is CHandle<animAnimNode_Base> handle)
-        {
-            if (handle.Chunk is animAnimNode_Switch)
-            {
-                var inputNodes = handle.Chunk.GetProperty("InputNodes");
-                if (inputNodes is CArray<animPoseLink> animAry)
-                {
-                    var names = animAry
-                        .Select((animPoseLink) => GetNodeName(animPoseLink.Node) ?? "")
-                        .Where((name) => name != "")
-                        .ToArray();
-                    Descriptor = string.Join(", ", names);
-                    // Value = string.Join(", ", names);
-                    // IsValueExtrapolated = true;
-                    return;
-                }
-            }
-        }
-        else if (ResolvedData is IRedBufferPointer rbp && rbp.GetValue().Data is RedPackage pkg)
-        {
-            Descriptor = $"[{pkg.Chunks.Count}]";
-        }
-        else if (ResolvedData is IRedBufferPointer rbp2 && rbp2.GetValue().Data is CR2WList cl)
-        {
-            Descriptor = $"[{cl.Files.Count}]";
-        }
-        else if (ResolvedData is CKeyValuePair kvp)
-        {
-            Descriptor = kvp.Key;
-        }
-        else if (ResolvedData is questNodeDefinition qnd)
-        {
-            Descriptor = qnd.Id.ToString();
-            return;
-        }
-        else if (ResolvedData is scnSceneGraphNode sgn)
-        {
-            Descriptor = sgn.NodeId.Id.ToString();
-            return;
-        }
-        else if (ResolvedData is worldCompiledEffectInfo info)
-        {
-            Descriptor = string.Join(", ", info.PlacementInfos);
-            return;
-        }
-        else if (Data is TweakDBID tdb)
-        {
-            //Descriptor = Locator.Current.GetService<TweakDBService>().GetString(tdb);
-            Descriptor = tdb.GetResolvedText();
-            return;
-        }
-        else if (Data is gamedataLocKeyWrapper locKey)
-        {
-            Descriptor = ((ulong)locKey).ToString();
-            //Value = Locator.Current.GetService<LocKeyService>().GetFemaleVariant(value);
-        }
-        else if (Data is IRedString str)
-        {
-            var s = str.GetString();
-            if (s is not null && s.StartsWith("LocKey#") && ulong.TryParse(s[7..], out var locKey2))
-            {
-                Descriptor = locKey2.ToString();
-            }
-        }
-        //if (ResolvedData is CMaterialInstance && Parent is not null)
-        //{
-        //    if (Parent.Parent is not null && Parent.Parent.Parent is not null && Parent.Parent.Data is CMesh mesh)
-        //    {
-        //        Descriptor = mesh.MaterialEntries[int.Parse(Name)].Name;
-        //    }
-        //}
-        else if (Data is Vector3 v3)
-        {
-            Descriptor = $"{v3.X}, {v3.Y}, {v3.Z}";
-        }
-        else if (Data is Vector4 v4)
-        {
-            Descriptor = $"{v4.X}, {v4.Y}, {v4.Z}, {v4.W}";
-        }
-        else if (Data is Quaternion q)
-        {
-            Descriptor = $"{q.I}, {q.J}, {q.K}, {q.R}";
-        }
-
-        // For local and external materials
-        if (ResolvedData is CMaterialInstance or CResourceAsyncReference<IMaterial> && NodeIdxInParent > -1
-            && GetRootModel().GetModelFromPath("materialEntries")?.ResolvedData is CArray<CMeshMaterialEntry>
-                materialEntries && materialEntries.Count > NodeIdxInParent)
-        {
-            var isLocalMaterial = ResolvedData is CMaterialInstance;
-            var entry = materialEntries[NodeIdxInParent];
-
-            // If we immediately found the right material: use material name
-            if (entry.IsLocalInstance == isLocalMaterial && entry.Index == NodeIdxInParent)
-            {
-                Descriptor = entry.Name.GetResolvedText();
-                if (Descriptor != null)
-                {
-                    return;
-                }
-            }
-
-            // Else: Iterate to find material name
-            entry = materialEntries
-                .Where((e, idx) => e.Index == NodeIdxInParent && e.IsLocalInstance == isLocalMaterial)
-                .FirstOrDefault();
-
-            // Will return null if no entry is found
-            Descriptor = entry?.Name.GetResolvedText();
-
-            if (Descriptor != null)
-            {
-                return;
-            }
-        }
-        else if (ResolvedData is localizationPersistenceOnScreenEntry localizationPersistenceOnScreenEntry)
-        {
-            var desc = $"[{localizationPersistenceOnScreenEntry.PrimaryKey}]";
-            if (!string.IsNullOrEmpty(localizationPersistenceOnScreenEntry.SecondaryKey))
-            {
-                desc += $" {localizationPersistenceOnScreenEntry.SecondaryKey}";
-            }
-
-            Descriptor = desc;
-        }
-        else if (ResolvedData is inkTextureSlot texturesSlot)
-        {
-            var desc = texturesSlot.Texture.DepotPath.GetResolvedText();
-            if (!string.IsNullOrEmpty(desc))
-            {
-                Descriptor = desc;
-            }
-        }
-        else if (ResolvedData is entEffectDesc desc && desc.EffectName is CName name)
-        {
-            Descriptor = name;
-            return;
-        }
-        // mesh: boneTransforms (in different coordinate spaces)
-        else if (NodeIdxInParent > -1 &&
-                 (Parent?.Name == "boneTransforms" || Parent?.Name == "aPoseLS" || Parent?.Name == "aPoseMS") &&
-                 GetRootModel().GetModelFromPath("boneNames")?.ResolvedData is CArray<CName> boneNames &&
-                 boneNames.Count > NodeIdxInParent)
-        {
-            Descriptor = boneNames[NodeIdxInParent];
-        }
-        else if (ResolvedData is not null)
-        {
-            if (Data is IBrowsableDictionary ibd)
-            {
-                var pns = ibd.GetPropertyNames();
-                Descriptor = $"[{pns.Count()}]";
-            }
-            else if (Data is IList list)
-            {
-                Descriptor = $"[{list.Count}]";
-            }
-            else if (Data is Dictionary<string, object> dict)
-            {
-                Descriptor = $"[{dict.Count}]";
-            }
-        }
-        // some common "names" of classes that might be useful to display in the UI
-        var propNames = new string[]
-        {
-            "name", // default property
-            "partName", // ?
-            "slotName", // ?
-            "hudEntryName", // ?
-            "stateName", // ?
-            "characterRecordId", // tweak record children
-            "secondaryKey", // json
-            "femaleVariant", // also json
-            "maleVariant", // also json
-            "n", // ?
-            "componentName", // ?
-            "parameterName", // ?
-            "debugName", // e.g. nodes
-            "expressionString", // e.g. animMathExpressionNodes
-            "idleAnim", // .workspot handle work entry items
-            "category", // ?
-            "entryName", // ?
-            "className", // ?
-            "actorName", // ?
-            "sectorHash", // sectors
-            "propertyPath" // ?
-        };
-        if (ResolvedData is RedBaseClass irc)
-        {
-            foreach (var propName in propNames)
-            {
-                var prop = GetPropertyByRedName(irc.GetType(), propName);
-                if (prop is not null)
-                {
-                    var p = irc.GetProperty(prop.RedName.NotNull());
-                    if (p?.ToString() is null or "None")
-                    {
-                        continue;
-                    }
-                    Descriptor = p?.ToString();
-                    return;
-                }
-            }
-        }
-        else
-        {
-            foreach (var propName in propNames)
-            {
-                if (Data is not null)
-                {
-                    var prop = Data.GetType().GetProperty(propName);
-
-                    if (prop is not null)
-                    {
-                        var val = prop.GetValue(Data);
-                        if (val is not null)
-                        {
-                            Descriptor = val.ToString().NotNull();
-                        }
-
-                        return;
-                    }
-                }
-            }
-        }
-    }
+ 
 
     private string? GetNodeName(CWeakHandle<animAnimNode_Base>? linkNode)
     {
@@ -3159,30 +2755,31 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
     {
         ArgumentNullException.ThrowIfNull(Parent);
 
-        if (ResolvedData is IRedArray || PropertyType.IsAssignableTo(typeof(IRedLegacySingleChannelCurve)))
+        if (ResolvedData is not IRedArray && !PropertyType.IsAssignableTo(typeof(IRedArray)) &&
+            !PropertyType.IsAssignableTo(typeof(IRedLegacySingleChannelCurve)))
         {
-            if (Data is RedDummy)
+            return false;
+        }
+
+        if (Data is not RedDummy)
+        {
+            return true;
+        }
+
+        if (_flags == null || _flags.Equals(Flags.Empty))
+        {
+            if (System.Activator.CreateInstance(PropertyType) is IRedType o)
             {
-                if (_flags == null || _flags.Equals(Flags.Empty))
-                {
-                    if (System.Activator.CreateInstance(PropertyType) is IRedType o)
-                    {
-                        Data = o;
-                        return true;
-                    }
-                }
-                else
-                {
-                    var flags = Flags.NotNull();
-                    if (System.Activator.CreateInstance(PropertyType, flags.MoveNext() ? flags.Current : 0) is IRedType o)
-                    {
-                        Data = o;
-                        return true;
-                    }
-                }
+                Data = o;
+                return true;
             }
-            else
+        }
+        else
+        {
+            var flags = Flags.NotNull();
+            if (System.Activator.CreateInstance(PropertyType, flags.MoveNext() ? flags.Current : 0) is IRedType o)
             {
+                Data = o;
                 return true;
             }
         }
@@ -3212,6 +2809,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         {
             if (ResolvedData is IRedArray ira)
             {
+                index = Math.Min(index, ira.Count - 1);
                 var comp = CheckTypeCompatibility(ira.InnerType, item.GetType());
                 switch (comp)
                 {
@@ -3238,6 +2836,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             }
             else if (Data is IRedArray ira2) // Not sure why, but seems to be important^^
             {
+                index = Math.Min(index, ira2.Count - 1);
                 var comp = CheckTypeCompatibility(ira2.InnerType, item.GetType());
                 switch (comp)
                 {
@@ -3307,11 +2906,11 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             //CalculateProperties();
             //Tab.File.SetIsDirty(true);
 
-            Tab?.Parent.SetIsDirty(true);
             RecalculateProperties(item);
 
             // re-number children
             ReindexChildren();
+            Tab?.Parent.SetIsDirty(true);
 
             if (Properties.Count > index && Tab is not null)
             {
@@ -3358,7 +2957,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
      */
     private void AdjustPropertiesAfterPasteAsNewItem()
     {
-        if (Parent is null || !IsInArray || ResolvedData is RedDummy || IsShiftBeingHeld)
+        if (Parent is null || !IsInArray || ResolvedData is RedDummy || IsShiftKeyPressed)
         {
             return;
         }

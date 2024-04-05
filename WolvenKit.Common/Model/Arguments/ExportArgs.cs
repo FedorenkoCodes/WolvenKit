@@ -65,7 +65,11 @@ namespace WolvenKit.Common.Model.Arguments
     /// </summary>
     public class MorphTargetExportArgs : ExportArgs
     {
+        // Export as GLTF?
         private bool _isBinary = true;
+
+        // Export textures?
+        private bool _exportTextures = false;
 
         /// <summary>
         /// Binary Export Bool, Decides between GLB and GLTF
@@ -77,10 +81,19 @@ namespace WolvenKit.Common.Model.Arguments
         public bool IsBinary { get => _isBinary; set => SetProperty(ref _isBinary, value); }
 
         /// <summary>
+        /// Export morphtarget's textures (pngs)
+        /// </summary>
+        [Category("Export Settings")]
+        [Display(Name = "Export textures (pngs)")]
+        [Description("If selected, the morphtarget's textures will be exported.")]
+        [WkitScriptAccess("ExportTextures")]
+        public bool ExportTextures { get => _exportTextures; set => SetProperty(ref _exportTextures, value); }
+
+        /// <summary>
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
-        public override string ToString() => $"GLTF/GLB | Is Binary :  {IsBinary}";
+        public override string ToString() => $"{(IsBinary ? "glb" : "gltf")} | Textures: {ExportTextures}";
 
     }
 
@@ -271,7 +284,18 @@ namespace WolvenKit.Common.Model.Arguments
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
-        public override string ToString() => $"GLTF/GLB | Export Type : {meshExportType} | Lod filter : {LodFilter} | Is Binary : {isGLBinary}";
+        public override string ToString()
+        {
+            var stringParts = new List<string> { isGLBinary ? "glb" : "gltf" };
+            if (withMaterials)
+            {
+                stringParts.Add("materials: true");
+            }
+
+            stringParts.Add(meshExportType.ToString());
+            stringParts.Add($"Lod filter : {LodFilter}");
+            return string.Join(" | ", stringParts);
+        }
     }
 
     /// <summary>
@@ -313,6 +337,15 @@ namespace WolvenKit.Common.Model.Arguments
         public bool IsBinary { get => _isBinary; set => SetProperty(ref _isBinary, value); }
 
         /// <summary>
+        /// Additive Animation Relative Positioning Bool, 
+        /// </summary>
+        [Category("Export Settings")]
+        [Display(Name = "Additive Anims Relative to Local Transform")]
+        [Description("Additive animations are typically relative to origin. If selected, they will be relative to the joint's Local Transform (e.g. vehicle parts will be in 'correct' position), which is probably what you want. By default import will strip them out again.")]
+        [WkitScriptAccess()]
+        public bool AdditiveRelativeToLocalTransform { get; set; } = true;
+
+        /// <summary>
         /// Root Motion Export Bool
         /// </summary>
         [Category("Export Settings")]
@@ -325,7 +358,7 @@ namespace WolvenKit.Common.Model.Arguments
         /// String Override to display info in datagrid.
         /// </summary>
         /// <returns>String</returns>
-        public override string ToString() => "GLTF/GLB | " + $"Is Binary :  {IsBinary}";
+        public override string ToString() => $"{(IsBinary ? "glb" : "gltf")}, Additive Anims Relative: { AdditiveRelativeToLocalTransform }, Root Motion: {incRootMotion}";
     }
 
     /// <summary>

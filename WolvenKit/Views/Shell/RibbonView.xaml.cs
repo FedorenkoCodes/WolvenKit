@@ -8,14 +8,21 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using ControlzEx.Standard;
-using Octokit;
 using ReactiveUI;
 using Splat;
 using WolvenKit.App.Models;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Core.Interfaces;
+using WolvenKit.Core.Services;
+
+enum LaunchGameProfile
+{
+    Directly,
+    FromLastSave,
+    FromSpecificSave,
+}
 
 namespace WolvenKit.Views.Shell
 {
@@ -23,7 +30,9 @@ namespace WolvenKit.Views.Shell
     {
         private readonly ISettingsManager _settingsManager;
         private readonly ILoggerService _loggerService;
+        private readonly IModifierViewStateService _modifierViewStateService;
 
+        
         public RibbonView()
         {
             ViewModel = Locator.Current.GetService<RibbonViewModel>();
@@ -32,6 +41,7 @@ namespace WolvenKit.Views.Shell
 
             _settingsManager = Locator.Current.GetService<ISettingsManager>();
             _loggerService = Locator.Current.GetService<ILoggerService>();
+            _modifierViewStateService = Locator.Current.GetService<IModifierViewStateService>();
 
             this.WhenActivated(disposables =>
             {
@@ -109,6 +119,8 @@ namespace WolvenKit.Views.Shell
                     viewModel => viewModel.MainViewModel.LaunchGameCommand,
                     view => view.MenuItemLaunchGame)
                 .DisposeWith(disposables);
+
+                MenuItemLaunchGameFromLastSave.Click += MenuItemLaunchGameFromLastSave_Click;
             });
 
             _settingsManager.WhenAnyValue(x => x.LaunchProfiles).Subscribe(_ => GetLaunchProfiles());
@@ -194,7 +206,7 @@ namespace WolvenKit.Views.Shell
             }
         }
 
-        private void MenuItem_SubmenuOpened(object sender, RoutedEventArgs e)
+        private void ReadGameFiles()
         {
             // get save files
             var saveDir = Path.Combine(
@@ -213,58 +225,104 @@ namespace WolvenKit.Views.Shell
                     menuItem.Click -= LaunchSaveItem_Click;
                 }
             }
+
             MenuItemLaunchGameSave.Items.Clear();
 
-            // populate items
-            foreach (var folder in Directory.GetDirectories(saveDir))
-            {
-                var save = Path.Combine(folder, "sav.dat");
-                if (File.Exists(save))
+            var directories = Directory.GetDirectories(saveDir)
+                .Select(folder => new { Folder = folder, Save = Path.Combine(folder, "sav.dat") })
+                .Where(x => File.Exists(x.Save))
+                .Select(x => new
                 {
-                    var dirName = new DirectoryInfo(folder).Name;
-                    //var info = Path.Combine(folder, "metadata.9.json");
-                    //var tooltip = File.Exists(info) ? File.ReadAllText(info) : "";
-                    var screenshot = Path.Combine(folder, "screenshot.png");
-                    var imageControl = new Image();
-                    var bitmapImage = new BitmapImage(new Uri(screenshot, UriKind.RelativeOrAbsolute));
-                    imageControl.Source = bitmapImage;
+                    DirName = new DirectoryInfo(x.Folder).Name,
+                    Screenshot = Path.Combine(x.Folder, "screenshot.png"),
+                    x.Save,
+                    LastModified = new DirectoryInfo(x.Folder).LastWriteTime
+                })
+                .OrderByDescending(x => x.LastModified);
 
-                    MenuItem item = new()
-                    {
-                        Header = dirName,
-                        ToolTip = imageControl
-                    };
-                    item.Click += LaunchSaveItem_Click;
-                    MenuItemLaunchGameSave.Items.Add(item);
-                }
+
+            // populate items
+            foreach (var dir in directories)
+            {
+                var imageControl = new Image();
+                var bitmapImage = new BitmapImage(new Uri(dir.Screenshot, UriKind.RelativeOrAbsolute));
+                imageControl.Source = bitmapImage;
+
+                MenuItem item = new() { Header = dir.DirName, ToolTip = imageControl };
+                item.Click += LaunchSaveItem_Click;
+                MenuItemLaunchGameSave.Items.Add(item);
             }
         }
 
+        private void MenuItem_SubmenuOpened(object o, RoutedEventArgs args)
+        {
+            // TODO: Hacky workaround, fix with https://github.com/WolvenKit/WolvenKit/issues/1486
+            if (_modifierViewStateService.IsShiftKeyPressed)
+            {
+                // launch game from last save
+                MenuItemLaunchGameFromLastSave.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+
+                // Close context menu again
+                MenuHeaderLaunchGame.ContextMenu?.SetCurrentValue(MenuItem.IsEnabledProperty, false);
+                return;
+            }
+
+            ReadGameFiles();
+        }
+
+        private void MenuItemLaunchGameFromLastSave_Click(object o, RoutedEventArgs _)
+        {
+            // prevent exceptions
+            if (MenuItemLaunchGameSave is null)
+            {
+                return;
+            }
+
+            // if savegames not populated, populate savegames
+            if (MenuItemLaunchGameSave.Items.Count is 0)
+            {
+                ReadGameFiles();
+            }
+
+            // prevent exceptions some more
+            if (MenuItemLaunchGameSave.Items.Count is 0)
+            {
+                return;
+            }
+
+            MenuItem item = MenuItemLaunchGameSave.Items[0] as MenuItem;
+            if (item != null)
+            {
+                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            }
+
+        }
+
+
         private void LaunchSaveItem_Click(object sender, RoutedEventArgs e)
         {
-            if (e.Source is MenuItem item)
+            if (e.Source is not MenuItem { Header: string header })
             {
-                if (item.Header is string header)
-                {
-                    // -save=ManualSave-168 
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = _settingsManager.GetRED4GameLaunchCommand(),
-                            Arguments = $"{_settingsManager.GetRED4GameLaunchOptions()} -save={header}",
-                            ErrorDialog = true,
-                            UseShellExecute = true,
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        _loggerService.Error("Launch: error launching game! Please check your executable path in Settings.");
-                        _loggerService.Info($"Launch: error debug info: {ex.Message}");
-                    }
-                }
+                return;
             }
-                   
+
+            // -save=ManualSave-168 
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _settingsManager.GetRED4GameLaunchCommand(),
+                    Arguments = $"{_settingsManager.GetRED4GameLaunchOptions()} -save={header}",
+                    ErrorDialog = true,
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex)
+            {
+                _loggerService.Error("Launch: error launching game! Please check your executable path in Settings.");
+                _loggerService.Info($"Launch: error debug info: {ex.Message}");
+            }
+
         }
     }
 }

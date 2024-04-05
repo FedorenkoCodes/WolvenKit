@@ -12,10 +12,22 @@
     xmlns:treeViewEngine="clr-namespace:Syncfusion.UI.Xaml.TreeView.Engine;assembly=Syncfusion.SfTreeView.WPF"
     x:Name="redTreeView"
     d:DesignHeight="450"
+    ContextMenuOpening="OnContextMenuOpened"
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
+            <Style TargetType="StackPanel" x:Key="VisibleOnEmptyValueStyle">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Value, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="">
+                        <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsValueExtrapolated, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                        <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
             <Style x:Key="PropertyKeyStyle" TargetType="TextBlock">
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding Value, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="null">
@@ -139,23 +151,17 @@
                         VerticalAlignment="Center"
                         Kind="{Binding Extension}" />
                     <StackPanel
+                        Style="{StaticResource VisibleOnEmptyValueStyle}"
+                        Name="PropertyTypeDescriptor"
                         Grid.Column="1"
                         Margin="0,0,4,0"
                         Orientation="Horizontal">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Value, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
+                        
                         <TextBlock
                             Name="PropertyType"
                             Foreground="{StaticResource WolvenKitTan}"
                             Text="{Binding Type}" />
+                        <!-- icon -->
                         <StackPanel Orientation="Horizontal">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
@@ -235,7 +241,12 @@
                 </Style.Triggers>
             </Style>
 
-            <ContextMenu x:Key="TreeViewContextMenu" DataContext="{Binding Path=PlacementTarget, RelativeSource={RelativeSource Self}}">
+            <ContextMenu x:Key="TreeViewContextMenu"
+                         Name="TreeViewContextMenu"
+                         KeyUp="OnKeystateChanged"
+                         KeyDown="OnKeystateChanged"
+                         DataContext="{Binding Path=PlacementTarget, RelativeSource={RelativeSource Self}}">
+               
                 <ContextMenu.Resources>
                     <Style TargetType="MenuItem">
                         <Style.Triggers>
@@ -246,6 +257,14 @@
                     </Style>
                 </ContextMenu.Resources>
 
+
+                <!-- TweakXL -->
+
+                <!-- #########################################################
+                    ╔╦╗┬ ┬┌─┐┌─┐┬┌─═╗ ╦╦  
+                     ║ │││├┤ ├─┤├┴┐╔╩╦╝║  
+                     ╩ └┴┘└─┘┴ ┴┴ ┴╩ ╚═╩═╝
+                ######################################################### -->
                 <MenuItem
                     Header="TweakXL"
                     IsCheckable="False"
@@ -254,28 +273,32 @@
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="DatabaseExportOutline" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
+
+                    <!-- Create new Twak XL Override -->
                     <MenuItem
                         Command="{Binding Path=PlacementTarget.Tag.CreateTXLOverrideCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                         Header="Override Value"
                         IsCheckable="False"
                         Style="{StaticResource SyncfusionMenuItemStyle}" />
+
+
+                    <!-- Copy Twak XL Override -->
                     <MenuItem
                         Command="{Binding Path=PlacementTarget.Tag.CopyTXLOverrideCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                         Header="Copy to Clipboard"
                         IsCheckable="False"
+                        Visibility="{Binding Path=!PlacementTarget.Tag.IsShiftKeyPressed, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Style="{StaticResource SyncfusionMenuItemStyle}" />
+                    <!-- Copy Twak XL Name (with shift key down) -->
+                    <MenuItem
+                        Command="{Binding Path=PlacementTarget.Tag.CopyTXLOverrideNameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        Header="Copy Name to Clipboard"
+                        IsCheckable="False"
+                        Visibility="{Binding Path=PlacementTarget.Tag.IsShiftKeyPressed, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Style="{StaticResource SyncfusionMenuItemStyle}" />
                 </MenuItem>
 
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.OpenChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Open in New Tab"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconCodicons Kind="References" Style="{StaticResource ContextMenuIconStyleCodicons}" />
-                    </MenuItem.Icon>
-                </MenuItem>
+                <!-- Create Item In Buffer -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.AddItemToCompiledDataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Create Item In Buffer"
@@ -286,6 +309,8 @@
                         <iconPacks:PackIconMaterial Kind="ContentDuplicate" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Save Buffer To Disk -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.SaveBufferToDiskCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Save Buffer To Disk"
@@ -296,6 +321,8 @@
                         <iconPacks:PackIconMaterial Kind="ContentSave" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Load Buffer From Disk -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.LoadBufferFromDiskCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Load Buffer From Disk"
@@ -306,6 +333,28 @@
                         <iconPacks:PackIconMaterial Kind="FolderOpen" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Open in New Tab -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.OpenChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Open in New Tab"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconCodicons Kind="References" Style="{StaticResource ContextMenuIconStyleCodicons}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- #########################################################
+                    ╦ ╦┌┬┐┬┬  
+                    ║ ║ │ ││  
+                    ╚═╝ ┴ ┴┴─┘
+                ######################################################### -->
+
+                <Separator />
+
+                <!-- Duplicate-->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.DuplicateChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Duplicate Item(s) in Array/Buffer"
@@ -316,6 +365,8 @@
                         <iconPacks:PackIconMaterial Style="{StaticResource ContextMenuIconStyleMaterial}" Kind="ContentDuplicate" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Duplicate As New Chunk -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.DuplicateAsNewChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Duplicate as new Item(s)"
@@ -326,6 +377,8 @@
                         <iconPacks:PackIconMaterial Kind="ContentDuplicate" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Rename Class -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.RenameDynamicClassCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Rename Class"
@@ -342,6 +395,8 @@
                             Kind="Text" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Rename Property -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.RenamePropertyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Rename Property"
@@ -358,22 +413,145 @@
                             Kind="Text" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Mesh only -->
+                <!-- Rename Material -->
                 <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.DeletePropertyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Delete Property"
+                    Command="{Binding Path=PlacementTarget.Tag.RenameMaterialCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Rename Material"
                     IsCheckable="False"
                     Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowDynamicPropertyOperations, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsMaterial, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
-                        <iconPacks:PackIconCodicons
+                        <iconPacks:PackIconMaterial
                             Width="13"
                             Height="13"
                             Padding="0,0,0,0"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Kind="Remove" />
+                            Kind="RenameBox" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Mesh only -->
+                <!-- Add material and definition -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.AddMaterialAndDefinitionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Add material and definition"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsMaterialArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial
+                            Width="13"
+                            Height="13"
+                            Padding="0,0,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="Plus" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                
+                <!-- Delete unused materials -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.DeleteUnusedMaterialsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Delete unused materials"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial
+                            Width="13"
+                            Height="13"
+                            Padding="0,0,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="FormatClear" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Search & Replace -->
+                <MenuItem
+                    Command="{Binding OpenSearchAndReplaceDialogCommand, Source={x:Reference redTreeView}}"
+                    Header="Search and Replace in Selection"
+                    IsCheckable="False"
+                    Visibility="{Binding Path=HasSelection, Source={x:Reference redTreeView}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Style="{StaticResource SyncfusionMenuItemStyle}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial
+                            Width="13"
+                            Height="13"
+                            Padding="0,0,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="FindReplace" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!--  
+                For arrays of indexables: Renumber Indices of child nodes, starting at 0
+                Useful if you paste a bunch of material definitions from multiple sources 
+                -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.ReindexChildDataIndexPropertiesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Recalculate child index properties"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowRenumberArrayIndexProperties, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Calculator" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Regenerate appearance dependencies -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.RegenerateAppearanceVisualControllerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Regenerate Appearance Dependencies"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Refresh" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Generate CRUID -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.GenerateCRUIDCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Generate new CRUID"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Dice3Outline" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+
+                <!-- #########################################################
+                    ╔═╗┌─┐┌─┐┬ ┬ ┬ ╔═╗┌─┐┌─┐┌┬┐┌─┐
+                    ║  │ │├─┘└┬┘┌┼─╠═╝├─┤└─┐ │ ├┤ 
+                    ╚═╝└─┘┴   ┴ └┘ ╩  ┴ ┴└─┘ ┴ └─┘ 
+                ######################################################### -->
+                <Separator />
+
+
+                <!-- Copy Value (Ctrl+C) -->
+                <MenuItem
+                    Command="ApplicationCommands.Copy"
+                    CommandParameter="{Binding}"
+                    CommandTarget="{Binding}"
+                    Header="Copy Value to Clipboard"
+                    IsCheckable="False"
+                    Visibility="{Binding Path=PlacementTarget.Tag.HasValue, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Style="{StaticResource SyncfusionMenuItemStyle}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconCodicons Kind="Copy" Style="{StaticResource ContextMenuIconStyleCodicons}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Copy Handle -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.CopyHandleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Copy Handle"
@@ -384,22 +562,26 @@
                         <iconPacks:PackIconMaterial Kind="ContentCopy" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Copy -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.CopyChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Copy From Array/Buffer"
                     IsCheckable="False"
                     Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowArrayOps, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsInArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ContentCopy" Style="{StaticResource ContextMenuIconStyleMaterial}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Copy Selection -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.CopySelectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Copy Selection From Array/Buffer"
                     IsCheckable="False"
                     Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowArrayOps, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsInArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ContentCopy" Style="{StaticResource ContextMenuIconStyleMaterial}" />
@@ -483,22 +665,89 @@
                     </MenuItem.Icon>
                 </MenuItem>
 
-                <!--  
-                For arrays of indexables: Renumber Indices of child nodes, starting at 0
-                Useful if you paste a bunch of material definitions from multiple sources 
-                -->
+                <Separator />
+
+                <!-- #########################################################
+                        ╔╦╗┌─┐┬  ┌─┐┌┬┐┌─┐  ┌─┐┌─┐┌─┐┬─┐┌─┐┌┬┐┬┌─┐┌┐┌┌─┐
+                         ║║├┤ │  ├┤  │ ├┤   │ │├─┘├┤ ├┬┘├─┤ │ ││ ││││└─┐
+                        ═╩╝└─┘┴─┘└─┘ ┴ └─┘  └─┘┴  └─┘┴└─┴ ┴ ┴ ┴└─┘┘└┘└─┘                   
+                #########################################################0 -->
+
                 <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.ReindexChildDataIndexPropertiesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Recalculate child index properties"
+                    Command="{Binding Path=PlacementTarget.Tag.DeletePropertyCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Delete Property"
                     IsCheckable="False"
                     Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowRenumberArrayIndexProperties, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
-
+                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowDynamicPropertyOperations, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Calculator" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                        <iconPacks:PackIconCodicons
+                            Width="13"
+                            Height="13"
+                            Padding="0,0,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Kind="Remove" />
                     </MenuItem.Icon>
                 </MenuItem>
 
+                <!-- Delete item -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Delete Item in Array/Buffer"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsInArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconCodicons Kind="Remove" Style="{StaticResource ContextMenuIconStyleCodicons}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Delete Selection -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.DeleteSelectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Delete Selection in Array/Buffer"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsInArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconCodicons Kind="Remove" Style="{StaticResource ContextMenuIconStyleCodicons}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Delete All -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.DeleteAllCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Delete All Items in Array/Buffer"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=PlacementTarget.Tag.IsArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="NotificationClearAll" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Reset Object -->
+                <MenuItem
+                    Command="{Binding Path=PlacementTarget.Tag.ResetObjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                    Header="Reset Object"
+                    IsCheckable="False"
+                    Style="{StaticResource SyncfusionMenuItemStyle}"
+                    Visibility="{Binding Path=!PlacementTarget.Tag.IsArray, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Delete" Style="{StaticResource ContextMenuIconStyleMaterial}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+
+                <Separator />
+                <!-- #####################################################
+                        ╦┌┬┐┌─┐┌─┐┬─┐┌┬┐  ╔═╗─┐ ┬┌─┐┌─┐┬─┐┌┬┐
+                        ║│││├─┘│ │├┬┘ │   ║╣ ┌┴┬┘├─┘│ │├┬┘ │ 
+                        ╩┴ ┴┴  └─┘┴└─ ┴   ╚═╝┴ └─┴  └─┘┴└─ ┴               
+                #########################################################0 -->
+
+                <!-- Export Chunk (to JSON) -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.ExportChunkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Export to JSON"
@@ -508,6 +757,8 @@
                         <iconPacks:PackIconCodicons Kind="Json" Style="{StaticResource ContextMenuIconStyleCodicons}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Export World Node Data -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.ExportNodeDataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Export NodeData to JSON"
@@ -518,6 +769,8 @@
                         <iconPacks:PackIconCodicons Kind="Json" Style="{StaticResource ContextMenuIconStyleCodicons}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Import World Node Data -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.ImportWorldNodeDataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Import from JSON to worldStreamingSector"
@@ -528,6 +781,8 @@
                         <iconPacks:PackIconCodicons Kind="Json" Style="{StaticResource ContextMenuIconStyleCodicons}" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <!-- Import from JSON -->
                 <MenuItem
                     Command="{Binding Path=PlacementTarget.Tag.ImportWorldNodeDataWithoutCoordsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                     Header="Import from JSON (no coords update)"
@@ -538,77 +793,8 @@
                         <iconPacks:PackIconCodicons Kind="Json" Style="{StaticResource ContextMenuIconStyleCodicons}" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem
-                    Command="ApplicationCommands.Copy"
-                    CommandParameter="{Binding}"
-                    CommandTarget="{Binding}"
-                    Header="Copy Value to Clipboard"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconCodicons Kind="Copy" Style="{StaticResource ContextMenuIconStyleCodicons}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Delete Item in Array/Buffer"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowArrayOps, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconCodicons Kind="Remove" Style="{StaticResource ContextMenuIconStyleCodicons}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.DeleteSelectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Delete Selection in Array/Buffer"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowArrayOps, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconCodicons Kind="Remove" Style="{StaticResource ContextMenuIconStyleCodicons}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.DeleteAllCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Delete All Items in Array/Buffer"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=PlacementTarget.Tag.ShouldShowArrayOps, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="NotificationClearAll" Style="{StaticResource ContextMenuIconStyleMaterial}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.RegenerateAppearanceVisualControllerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Regenerate Appearance Dependencies"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Refresh" Style="{StaticResource ContextMenuIconStyleMaterial}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.ResetObjectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Reset Object"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Delete" Style="{StaticResource ContextMenuIconStyleMaterial}" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem
-                    Command="{Binding Path=PlacementTarget.Tag.GenerateCRUIDCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                    Header="Generate new CRUID"
-                    IsCheckable="False"
-                    Style="{StaticResource SyncfusionMenuItemStyle}"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Dice3Outline" Style="{StaticResource ContextMenuIconStyleMaterial}" />
-                    </MenuItem.Icon>
-                </MenuItem>
+
             </ContextMenu>
 
             <converters:TreeViewItemTemplateSelector x:Key="itemTemplateSelector" x:Name="itemTemplateSelector">
@@ -789,6 +975,7 @@
         SelectedItem="{Binding ElementName=redTreeView, Path=SelectedItem, Mode=TwoWay}"
         SelectedItems="{Binding ElementName=redTreeView, Path=SelectedItems, Mode=TwoWay}"
         SelectionChanged="OnSelectionChanged"
+        MouseDoubleClick="OnDoubleClick"
         SelectionMode="Extended"
         ShowLines="True"
         VirtualizingPanel.IsVirtualizing="True"
@@ -812,13 +999,13 @@
                             Margin="5,2,5,0"
                             VerticalAlignment="Center"
                             Text="Duplicate item to this index (release control to move)"
-                            Visibility="{Binding Data[0].Content.IsControlBeingHeld, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            Visibility="{Binding Data[0].Content.IsCtrlKeyPressed, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         <TextBlock
                             Grid.Row="0"
                             Margin="5,2,5,0"
                             VerticalAlignment="Center"
                             Text="Move item to this index (hold control to duplicate)"
-                            Visibility="{Binding Data[0].Content.IsControlBeingHeld, Converter={StaticResource InvertBooleanVisibilityConverter}}" />
+                            Visibility="{Binding Data[0].Content.IsCtrlKeyPressed, Converter={StaticResource InvertBooleanVisibilityConverter}}" />
                         <StackPanel Grid.Row="1" Orientation="Horizontal">
                             <TextBlock
                                 Margin="5,0,5,2"
