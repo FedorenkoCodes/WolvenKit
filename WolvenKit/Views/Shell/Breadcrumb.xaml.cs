@@ -166,7 +166,10 @@ public partial class Breadcrumb : UserControl
             var parts = new List<string>();
             foreach (var viewModel in ItemsSource)
             {
-                parts.Add(viewModel.PropertyName);
+                if (!string.IsNullOrEmpty(viewModel.PropertyName))
+                {
+                    parts.Add(viewModel.PropertyName);
+                }
             }
             Editor.SetCurrentValue(TextBox.TextProperty, string.Join('\\', parts));
         }

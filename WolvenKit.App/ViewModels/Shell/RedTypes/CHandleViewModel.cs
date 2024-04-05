@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using WolvenKit.App.ViewModels.Dialogs;
-using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 
 public class CHandleViewModel : RedTypeViewModel<IRedHandle>
 {
+    private RedTypeViewModel? _innerData;
+
     public CHandleViewModel(RedTypeViewModel? parent, RedPropertyInfo redPropertyInfo, IRedHandle? data) : base(parent, redPropertyInfo, data)
     {
         ExtensionIcon = "References";
@@ -30,8 +31,12 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         {
             return;
         }
-
-        Properties.Add(RedTypeHelper.Create(this, new RedPropertyInfo(val), val));
+        
+        _innerData = RedTypeHelper.Create(this, new RedPropertyInfo(val), val);
+        foreach (var entry in _innerData.Properties)
+        {
+            Properties.Add(entry);
+        }
     }
 
     public override IList<KeyValuePair<string, Action>> GetSupportedActions()

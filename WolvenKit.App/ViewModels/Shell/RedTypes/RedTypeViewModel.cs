@@ -180,7 +180,10 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         var redTypeViewModel = this;
         do
         {
-            parts.Add(redTypeViewModel.PropertyName);
+            if (!string.IsNullOrEmpty(redTypeViewModel.PropertyName))
+            {
+                parts.Add(redTypeViewModel.PropertyName);
+            }
             redTypeViewModel = redTypeViewModel.Parent;
         } while (redTypeViewModel != null);
 
