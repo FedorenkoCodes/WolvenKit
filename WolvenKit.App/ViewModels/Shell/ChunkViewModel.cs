@@ -2910,7 +2910,6 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
             // re-number children
             ReindexChildren();
-            Tab?.Parent.SetIsDirty(true);
 
             if (Properties.Count > index && Tab is not null)
             {
@@ -2920,6 +2919,8 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                     Tab.AddToSelection(chunkModel);
                 }
             }
+
+            Tab?.Parent.SetIsDirty(true);
             return true;
         }
         catch (Exception ex) { _loggerService.Error(ex); }
