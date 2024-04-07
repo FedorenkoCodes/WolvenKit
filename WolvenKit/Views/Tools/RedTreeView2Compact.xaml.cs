@@ -20,6 +20,7 @@ using WolvenKit.App.ViewModels.Shell.RedTypes;
 using static WolvenKit.Views.Tools.RedTreeView2;
 using Syncfusion.UI.Xaml.Grid;
 using WolvenKit.Views.Shell;
+using WolvenKit.App.ViewModels.Shell;
 
 namespace WolvenKit.Views.Tools;
 /// <summary>
@@ -96,10 +97,7 @@ public partial class RedTreeView2Compact : UserControl
         {
             foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
             {
-                var menuItem = new MenuItem { Header = supportedAction.Key };
-                menuItem.Click += (_, _) => supportedAction.Value();
-
-                e.ContextMenu.Items.Add(menuItem);
+                e.ContextMenu.Items.Add(BuildMenuItem(supportedAction));
             }
         }
 
@@ -117,6 +115,23 @@ public partial class RedTreeView2Compact : UserControl
         if (e.ContextMenu.Items.Count == 0)
         {
             e.Handled = true;
+        }
+
+        MenuItem BuildMenuItem(ContextMenuItem supportedAction)
+        {
+            var menuItem = new MenuItem { Header = supportedAction.Name };
+
+            if (supportedAction.Action != null)
+            {
+                menuItem.Click += (_, _) => supportedAction.Action();
+            }
+
+            foreach (var subItem in supportedAction.Children)
+            {
+                menuItem.Items.Add(BuildMenuItem(subItem));
+            }
+
+            return menuItem;
         }
     }
 }

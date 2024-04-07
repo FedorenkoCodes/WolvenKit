@@ -412,7 +412,7 @@
                         <DockPanel
                             x:Name="RedDocumentHeader"
                             DataContext="{Binding Content.Content.Content, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContentControl}}}"
-                            ToolTip="{Binding RelativePath}">
+                            ToolTip="{Binding ToolTip}">
                             <others:FileIcon
                                 x:Name="DockIcon"
                                 Height="15"

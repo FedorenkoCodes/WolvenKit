@@ -52,9 +52,10 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
     protected readonly HashSet<string> _embedHashSet;
 
+    private readonly IGameFile _gameFile;
     private readonly string _path;
 
-    public RedDocumentViewModel(CR2WFile file, string path, AppViewModel appViewModel,
+    public RedDocumentViewModel(IGameFile gameFile, AppViewModel appViewModel,
         IDocumentTabViewmodelFactory documentTabViewmodelFactory,
         IChunkViewmodelFactory chunkViewmodelFactory,
         IProjectManager projectManager,
@@ -65,7 +66,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
         IArchiveManager archiveManager,
         IHookService hookService,
         INodeWrapperFactory nodeWrapperFactory,
-        bool isReadyOnly = false) : base(path)
+        bool isReadyOnly = false) : base(gameFile.FileName)
     {
         _documentTabViewmodelFactory = documentTabViewmodelFactory;
         _chunkViewmodelFactory = chunkViewmodelFactory;
@@ -86,14 +87,24 @@ public partial class RedDocumentViewModel : DocumentViewModel
             "xl"
         };
 
-        _path = path;
+        _gameFile = gameFile;
+        _path = _gameFile.FileName;
 
+        _extension = Path.GetExtension(gameFile.FileName) != "" ? Path.GetExtension(gameFile.FileName)[1..] : "";
+        
+        using var ms = new MemoryStream();
+        _gameFile.Extract(ms);
 
-        _extension = Path.GetExtension(path) != "" ? Path.GetExtension(path)[1..] : "";
-
+        if (!_parserService.TryReadRed4File(ms, out var file))
+        {
+            throw new Exception();
+        }
+        
         Cr2wFile = file;
         IsReadOnly = isReadyOnly;
         _isInitialized = true;
+
+        Header = GetHeader();
         PopulateItems();
     }
 
@@ -111,6 +122,8 @@ public partial class RedDocumentViewModel : DocumentViewModel
     {
         value?.OnSelected();
     }
+
+    public string ToolTip => $"[{_gameFile.GetArchive().Name}] {_gameFile.FileName}";
 
     // assume files that don't exist are relative paths
     public string RelativePath
@@ -151,6 +164,23 @@ public partial class RedDocumentViewModel : DocumentViewModel
     #region methods
 
     public ILoggerService GetLoggerService() => _loggerService;
+
+    protected override string GetHeader()
+    {
+        var header = _gameFile.GetArchive().Source switch
+        {
+            EArchiveSource.Unknown => "[?] ",
+            EArchiveSource.Base => "[B] ",
+            EArchiveSource.EP1 => "[E] ",
+            EArchiveSource.Mod => "[M] ",
+            EArchiveSource.Project => "[P] ",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        header += Path.GetFileName(ContentId) + (IsDirty ? "*" : "");
+
+        return header;
+    }
 
     public override async Task Save(object? parameter)
     {

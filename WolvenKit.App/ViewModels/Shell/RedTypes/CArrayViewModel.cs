@@ -95,14 +95,14 @@ public class CArrayViewModel : RedTypeViewModel<IRedArray>, IMultiActionSupport
             new("Remove items", RemoveItems)
         };
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
         if (!IsReadOnly)
         {
-            result.Insert(0, new KeyValuePair<string, Action>("New item", AddItem));
-            result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", Clear));
+            result.Insert(0, new ContextMenuItem("New item", AddItem));
+            result.Insert(1, new ContextMenuItem("Clear item(s)", Clear));
         }
 
         return result;

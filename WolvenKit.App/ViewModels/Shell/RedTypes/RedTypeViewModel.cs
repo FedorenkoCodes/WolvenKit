@@ -226,13 +226,13 @@ public abstract class RedTypeViewModel : INotifyPropertyChanging, INotifyPropert
         }
     }
 
-    public virtual IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public virtual IList<ContextMenuItem> GetSupportedActions()
     {
-        var result = new List<KeyValuePair<string, Action>>();
+        var result = new List<ContextMenuItem>();
 
         if (!IsReadOnly && Parent is CArrayViewModel cArrayViewModel)
         {
-            result.Add(new KeyValuePair<string, Action>("Remove item", RemoveItemOnClick));
+            result.Add(new ContextMenuItem("Remove item", RemoveItemOnClick));
 
             void RemoveItemOnClick()
             {

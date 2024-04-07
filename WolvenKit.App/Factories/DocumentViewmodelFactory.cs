@@ -55,8 +55,8 @@ public class DocumentViewmodelFactory : IDocumentViewmodelFactory
         _nodeWrapperFactory = nodeWrapperFactory;
 
     }
-    public RedDocumentViewModel RedDocumentViewModel(CR2WFile file, string path, AppViewModel appViewModel, bool isReadOnly = false) 
-        => new(file, path, appViewModel, _tabViewmodelFactory, _chunkViewmodelFactory, _projectManager, _loggerService, _globals, _parserService, _watcherService, _archiveManager, _hookService, _nodeWrapperFactory, isReadOnly);
+    public RedDocumentViewModel RedDocumentViewModel(AppViewModel appViewModel, IGameFile gameFile, bool isReadOnly = false) 
+        => new(gameFile, appViewModel, _tabViewmodelFactory, _chunkViewmodelFactory, _projectManager, _loggerService, _globals, _parserService, _watcherService, _archiveManager, _hookService, _nodeWrapperFactory, isReadOnly);
 
     public WScriptDocumentViewModel WScriptDocumentViewModel(string path) => new(path, _scriptService);
 

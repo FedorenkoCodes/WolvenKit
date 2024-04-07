@@ -14,15 +14,15 @@ public class BaseBufferViewModel<T> : RedTypeViewModel<T> where T : IRedBufferWr
     {
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
-        result.Insert(0, new KeyValuePair<string, Action>("Save Buffer To Disk", SaveBufferToDisk));
+        result.Insert(0, new ContextMenuItem("Save Buffer To Disk", SaveBufferToDisk));
 
         if (!IsReadOnly)
         {
-            result.Insert(1, new KeyValuePair<string, Action>("Load Buffer From Disk", LoadBufferFromDisk));
+            result.Insert(1, new ContextMenuItem("Load Buffer From Disk", LoadBufferFromDisk));
         }
 
         return result;

@@ -60,12 +60,12 @@ public class TweakDBIDViewModel : RedTypeViewModel<TweakDBID>
 
     protected internal override void UpdateDisplayValue() => DisplayValue = _data.ToString();
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
-        result.Insert(0, new KeyValuePair<string, Action>("Override Value", CreateTXLOverride));
-        result.Insert(1, new KeyValuePair<string, Action>("Copy to Clipboard", CopyTXLOverride));
+        result.Insert(0, new ContextMenuItem("Override Value", CreateTXLOverride));
+        result.Insert(1, new ContextMenuItem("Copy to Clipboard", CopyTXLOverride));
 
         return result;
     }

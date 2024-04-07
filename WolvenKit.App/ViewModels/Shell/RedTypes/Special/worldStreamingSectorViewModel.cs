@@ -97,9 +97,9 @@ public class worldNodeDataBufferViewModel : DataBufferViewModel
         return base.GetValue();
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
-        var result = new List<KeyValuePair<string, Action>>
+        var result = new List<ContextMenuItem>
         {
             new("Export NodeData to JSON", ExportNodeData)
         };

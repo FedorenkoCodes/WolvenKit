@@ -47,7 +47,7 @@ public abstract partial class DocumentViewModel : PaneViewModel, IDocumentViewMo
 
     public DateTime LastWriteTime { get; protected set; } = DateTime.MaxValue;
 
-    private string GetHeader() => Path.GetFileName(ContentId) + (IsDirty ? "*" : "");
+    protected virtual string GetHeader() => Path.GetFileName(ContentId) + (IsDirty ? "*" : "");
 
 
     [RelayCommand]

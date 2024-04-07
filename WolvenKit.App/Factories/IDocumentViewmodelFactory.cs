@@ -1,11 +1,11 @@
 ﻿using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.Shell;
-using WolvenKit.RED4.Archive.CR2W;
+using WolvenKit.Core.Interfaces;
 
 namespace WolvenKit.App.Factories;
 public interface IDocumentViewmodelFactory
 {
-    public RedDocumentViewModel RedDocumentViewModel(CR2WFile file, string path, AppViewModel appViewModel, bool isReadOnly = false);
+    public RedDocumentViewModel RedDocumentViewModel(AppViewModel appViewModel, IGameFile gameFile, bool isReadOnly = false);
 
     public WScriptDocumentViewModel WScriptDocumentViewModel(string path);
 

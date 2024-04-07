@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Documents;
+using WolvenKit.Common;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
@@ -18,14 +19,16 @@ public class RedTypeHelper
     private readonly ISettingsManager _settingsManager;
     private readonly IGameControllerFactory _gameControllerFactory;
     private readonly ITweakDBService _tweakDbService;
+    private readonly IArchiveManager _archiveManager;
 
-    public RedTypeHelper(AppViewModel appViewModel, ILoggerService loggerService, ISettingsManager settingsManager, IGameControllerFactory gameControllerFactory, ITweakDBService tweakDbService)
+    public RedTypeHelper(AppViewModel appViewModel, ILoggerService loggerService, ISettingsManager settingsManager, IGameControllerFactory gameControllerFactory, ITweakDBService tweakDbService, IArchiveManager archiveManager)
     {
         _appViewModel = appViewModel;
         _loggerService = loggerService;
         _settingsManager = settingsManager;
         _gameControllerFactory = gameControllerFactory;
         _tweakDbService = tweakDbService;
+        _archiveManager = archiveManager;
     }
 
     public RedTypeViewModel Create(IRedType data, bool fetchData = true, bool isReadOnly = false) => Create(null, new RedPropertyInfo(data), data, null, fetchData, isReadOnly);
@@ -219,6 +222,8 @@ public class RedTypeHelper
     public ILoggerService GetLoggerService() => _loggerService;
     
     public IGameController GetGameController() => _gameControllerFactory.GetController();
+
+    public IArchiveManager GetArchiveManager() => _archiveManager;
     
     public async Task LoadTweakDB()
     {

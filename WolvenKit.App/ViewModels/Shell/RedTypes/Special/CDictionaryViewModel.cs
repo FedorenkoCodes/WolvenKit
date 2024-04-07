@@ -65,14 +65,14 @@ public class CDictionaryViewModel : CArrayViewModel
         return _viewCache;
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
         if (!IsReadOnly)
         {
-            result.Insert(0, new KeyValuePair<string, Action>("New item", AddClass));
-            result.Insert(1, new KeyValuePair<string, Action>("Clear item(s)", () =>
+            result.Insert(0, new ContextMenuItem("New item", AddClass));
+            result.Insert(1, new ContextMenuItem("Clear item(s)", () =>
             {
                 _data!.Clear();
                 Refresh(true);

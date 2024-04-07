@@ -39,7 +39,7 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         }
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
@@ -47,17 +47,17 @@ public class CHandleViewModel : RedTypeViewModel<IRedHandle>
         {
             if (!IsReadOnly)
             {
-                result.Insert(0, new KeyValuePair<string, Action>("Create class", SetClass));
+                result.Insert(0, new ContextMenuItem("Create class", SetClass));
             }
         }
         else
         {
-            result.Insert(0, new KeyValuePair<string, Action>("Find all references", FindAllReferences));
+            result.Insert(0, new ContextMenuItem("Find all references", FindAllReferences));
 
             if (!IsReadOnly)
             {
-                result.Insert(1, new KeyValuePair<string, Action>("Replace class", SetClass));
-                result.Insert(2, new KeyValuePair<string, Action>("Clear", () =>
+                result.Insert(1, new ContextMenuItem("Replace class", SetClass));
+                result.Insert(2, new ContextMenuItem("Clear", () =>
                 {
                     _data!.SetValue(null);
                     Refresh(true);

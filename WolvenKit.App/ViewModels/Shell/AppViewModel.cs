@@ -11,16 +11,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents.DocumentStructures;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Semver;
-using SharpGLTF.Schema2;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Extensions;
 using WolvenKit.App.Factories;
@@ -40,7 +37,7 @@ using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Common;
 using WolvenKit.Common.Exceptions;
 using WolvenKit.Common.Extensions;
-using WolvenKit.Common.Model.Database;
+using WolvenKit.Common.FNV1A;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
@@ -1089,36 +1086,83 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
     }
 
     [RelayCommand]
-    private async Task OpenRedFileAsync(FileEntry file)
-    {
-        if (file is not null)
-        {
-            _progressService.IsIndeterminate = true;
-            try
-            {
-                await using MemoryStream stream = new();
-                await file.ExtractAsync(stream);
-                if (OpenStream(stream, file.FileName, out var redfile))
-                {
-                    var fileViewModel = _documentViewmodelFactory.RedDocumentViewModel(redfile, file.FileName, this, file.Archive is not FileSystemArchive);
-                    if (!DockedViews.Contains(fileViewModel))
-                    {
-                        DockedViews.Add(fileViewModel);
-                    }
+    private void OpenRedFile(FileEntry file) => OpenGameFile(file);
 
-                    ActiveDocument = fileViewModel;
-                    UpdateTitle();
-                }
-            }
-            catch (Exception e)
+    private Dictionary<IGameFile, RedDocumentViewModel> _gameFileLookUp = new(GameFileEqualityComparer.Instance);
+
+    private class GameFileEqualityComparer : IEqualityComparer<IGameFile>
+    {
+        private GameFileEqualityComparer() { }
+
+        /// <summary>
+        /// Gets the singleton <see cref="GameFileEqualityComparer"/> instance.
+        /// </summary>
+        public static GameFileEqualityComparer Instance { get; } = new GameFileEqualityComparer();
+
+        public bool Equals(IGameFile? x, IGameFile? y)
+        {
+            if (ReferenceEquals(x, y))
             {
-                _loggerService.Error(e.Message);
+                return true;
             }
-            finally
+
+            if (ReferenceEquals(x, null))
             {
-                _progressService.IsIndeterminate = false;
+                return false;
             }
+
+            if (ReferenceEquals(y, null))
+            {
+                return false;
+            }
+
+            if (x.GetType() != y.GetType())
+            {
+                return false;
+            }
+
+            return x.Key == y.Key && x.GetArchive().Name == y.GetArchive().Name;
         }
+
+        public int GetHashCode(IGameFile obj) => HashCode.Combine(obj.Key, obj.GetArchive().Name);
+    }
+    
+    public bool OpenGameFile(IGameFile gameFile)
+    {
+        if (_gameFileLookUp.TryGetValue(gameFile, out var vm))
+        {
+            ActiveDocument = vm;
+            UpdateTitle();
+            
+            return true;
+        }
+
+        _progressService.IsIndeterminate = true;
+
+        try
+        {
+            var fileViewModel = _documentViewmodelFactory.RedDocumentViewModel(this, gameFile, gameFile.GetArchive() is not FileSystemArchive);
+            if (!DockedViews.Contains(fileViewModel))
+            {
+                _gameFileLookUp.Add(gameFile, fileViewModel);
+                DockedViews.Add(fileViewModel);
+            }
+
+            ActiveDocument = fileViewModel;
+            UpdateTitle();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            _loggerService.Error(e.Message);
+        }
+        finally
+        {
+            _progressService.IsIndeterminate = false;
+        }
+
+        return false;
     }
 
     public bool OpenFileFromProject(ResourcePath path)
@@ -1140,22 +1184,9 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
                 continue;
             }
 
-            using MemoryStream stream = new();
-            file.Extract(stream);
+            OpenGameFile(file);
 
-            if (OpenStream(stream, file.FileName, out var redfile))
-            {
-                var fileViewModel = _documentViewmodelFactory.RedDocumentViewModel(redfile, Path.Combine(projArchive.Project.ModDirectory, file.FileName), this, false);
-                if (!DockedViews.Contains(fileViewModel))
-                {
-                    DockedViews.Add(fileViewModel);
-                }
-
-                ActiveDocument = fileViewModel;
-                UpdateTitle();
-
-                return true;
-            }
+            return true;
         }
 
         return false;
@@ -1189,40 +1220,15 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
 
     public void OpenFileFromHash(ResourcePath hash)
     {
-        if (hash != 0)
+        if (hash == 0)
         {
-            _progressService.IsIndeterminate = true;
-            try
-            {
-                var file = _archiveManager.Lookup(hash);
-                if (file.HasValue && file.Value is FileEntry fe)
-                {
-                    using MemoryStream stream = new();
-                    fe.Extract(stream);
+            return;
+        }
 
-                    if (OpenStream(stream, fe.FileName, out var redfile))
-                    {
-                        var resourcePath = hash.GetResolvedText() ?? $"{Path.GetFileNameWithoutExtension(fe.FileName)}{fe.Extension}";
-                        var fileViewModel = _documentViewmodelFactory.RedDocumentViewModel(redfile, resourcePath, this, true);
-                        if (!DockedViews.Contains(fileViewModel))
-                        {
-                            DockedViews.Add(fileViewModel);
-                        }
-
-                        ActiveDocument = fileViewModel;
-                        UpdateTitle();
-
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                _loggerService.Error(e.Message);
-            }
-            finally
-            {
-                _progressService.IsIndeterminate = false;
-            }
+        var file = _archiveManager.Lookup(hash);
+        if (file is { HasValue: true, Value: FileEntry fe })
+        {
+            OpenGameFile(fe);
         }
     }
 
@@ -1557,7 +1563,19 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         return false;
     }
 
+    private bool TryGetProjectFile(string filePath, [NotNullWhen(true)] out IGameFile? gameFile)
+    {
+        gameFile = null;
 
+        if (_archiveManager.ProjectArchive is not FileSystemArchive projArchive)
+        {
+            return false;
+        }
+
+        var hash = FNV1A64HashAlgorithm.HashString(ResourcePath.SanitizePath(filePath[(projArchive.Project.ModDirectory.Length + 1)..]));
+
+        return projArchive.Files.TryGetValue(hash, out gameFile);
+    }
 
     private async Task LoadTweakDB()
     {
@@ -1594,10 +1612,9 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         switch (type)
         {
             case EWolvenKitFile.Cr2w:
-                if (OpenFile(fullPath, out var file))
+                if (TryGetProjectFile(fullPath, out var gameFile) && OpenGameFile(gameFile))
                 {
-                    fileViewModel = _documentViewmodelFactory.RedDocumentViewModel(file, fullPath, this, false);
-                    result = fileViewModel.IsInitialized();
+                    result = ActiveDocument!.IsInitialized();
                 }
                 break;
             case EWolvenKitFile.TweakXl:
@@ -1869,7 +1886,18 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         }
     }
 
-    public void CloseFile(IDocumentViewModel documentViewModel) => DockedViews.Remove(documentViewModel);
+    public void CloseFile(IDockElement documentViewModel)
+    {
+        if (documentViewModel is RedDocumentViewModel redDocumentViewModel)
+        {
+            foreach (var item in _gameFileLookUp.Where(kvp => ReferenceEquals(kvp.Value, redDocumentViewModel)).ToList())
+            {
+                _gameFileLookUp.Remove(item.Key);
+            }
+        }
+        
+        DockedViews.Remove(documentViewModel);
+    }
 
     public void SetStatusReady()
     {

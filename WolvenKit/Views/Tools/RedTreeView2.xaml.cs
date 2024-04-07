@@ -13,6 +13,7 @@ using Syncfusion.UI.Xaml.ScrollAxis;
 using Syncfusion.UI.Xaml.TreeGrid;
 using Syncfusion.UI.Xaml.TreeGrid.Helpers;
 using WolvenKit.App.ViewModels.Documents;
+using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.Views.Shell;
 
@@ -163,10 +164,7 @@ public partial class RedTreeView2 : UserControl
         {
             foreach (var supportedAction in redTypeViewModel.GetSupportedActions())
             {
-                var menuItem = new MenuItem { Header = supportedAction.Key };
-                menuItem.Click += (_, _) => supportedAction.Value();
-
-                e.ContextMenu.Items.Add(menuItem);
+                e.ContextMenu.Items.Add(BuildMenuItem(supportedAction));
             }
         }
 
@@ -184,6 +182,23 @@ public partial class RedTreeView2 : UserControl
         if (e.ContextMenu.Items.Count == 0)
         {
             e.Handled = true;
+        }
+
+        MenuItem BuildMenuItem(ContextMenuItem supportedAction)
+        {
+            var menuItem = new MenuItem { Header = supportedAction.Name };
+
+            if (supportedAction.Action != null)
+            {
+                menuItem.Click += (_, _) => supportedAction.Action();
+            }
+
+            foreach (var subItem in supportedAction.Children)
+            {
+                menuItem.Items.Add(BuildMenuItem(subItem));
+            }
+
+            return menuItem;
         }
     }
 

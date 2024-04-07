@@ -20,13 +20,13 @@ public class CWeakHandleViewModel : RedTypeViewModel<IRedWeakHandle>
         }
     }
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
         if (_data?.GetValue() != null)
         {
-            result.Insert(0, new KeyValuePair<string, Action>("Go to source", GoToSource));
+            result.Insert(0, new ContextMenuItem("Go to source", GoToSource));
         }
 
         return result;

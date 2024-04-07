@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell.RedTypes;
@@ -7,6 +9,11 @@ namespace WolvenKit.App.ViewModels.Shell.RedTypes;
 public class ResourceReferenceViewModel : RedTypeViewModel<IRedRef>
 {
     private string _selectedValue = "Default";
+
+    private bool _lookupDone;
+    private IGameFile? _projectFile = null;
+    private List<IGameFile> _modFiles = new();
+    private List<IGameFile> _baseFiles = new();
 
     public string[] EnumValues => new[]
     {
@@ -35,7 +42,7 @@ public class ResourceReferenceViewModel : RedTypeViewModel<IRedRef>
             }
 
             _selectedValue = value;
-            UpdatePath(value);
+            UpdateFlag(value);
         }
     }
 
@@ -53,14 +60,50 @@ public class ResourceReferenceViewModel : RedTypeViewModel<IRedRef>
 
     protected internal override void UpdateDisplayValue() => DisplayValue = _data!.DepotPath.IsResolvable ? _data!.DepotPath.GetResolvedText()! : _data!.DepotPath.GetRedHash().ToString();
 
-    public override IList<KeyValuePair<string, Action>> GetSupportedActions()
+    public override IList<ContextMenuItem> GetSupportedActions()
     {
         var result = base.GetSupportedActions();
 
-        result.Insert(0, new KeyValuePair<string, Action>("Go to file", GoToFile));
-        result.Insert(1, new KeyValuePair<string, Action>("Add file to project", AddFileToProject));
+        if (_data?.Flags == InternalEnums.EImportFlags.Embedded)
+        {
+            result.Insert(0, new ContextMenuItem("Embedded File!"));
+            return result;
+        }
+
+        if (!_lookupDone)
+        {
+            FindAllFiles();
+        }
+
+        var openFileMenu = new ContextMenuItem("Open file...");
+        var addFileMenu = new ContextMenuItem("Add file...");
+        
+        if (_projectFile != null)
+        {
+            openFileMenu.Children.Add(new ContextMenuItem("From project", () => OpenFile(_projectFile)));
+        }
+
+        foreach (var gameFile in _modFiles)
+        {
+            openFileMenu.Children.Add(new ContextMenuItem($"From mod ({gameFile.GetArchive().Name})", () => OpenFile(gameFile)));
+            addFileMenu.Children.Add(new ContextMenuItem($"From mod ({gameFile.GetArchive().Name})", () => OpenFile(gameFile)));
+        }
+
+        foreach (var gameFile in _baseFiles)
+        {
+            openFileMenu.Children.Add(new ContextMenuItem($"From base ({gameFile.GetArchive().Name})", () => OpenFile(gameFile)));
+            addFileMenu.Children.Add(new ContextMenuItem($"From base ({gameFile.GetArchive().Name})", () => OpenFile(gameFile)));
+        }
+
+        result.Insert(0, openFileMenu);
+        result.Insert(1, addFileMenu);
 
         return result;
+    }
+
+    private void OpenFile(IGameFile gameFile)
+    {
+        RedTypeHelper.GetAppViewModel().OpenGameFile(gameFile);
     }
 
     private void GoToFile()
@@ -101,5 +144,38 @@ public class ResourceReferenceViewModel : RedTypeViewModel<IRedRef>
         }
 
         DataObject = RedTypeManager.CreateRedType(RedPropertyInfo.BaseType, _data!.DepotPath, Enum.Parse<InternalEnums.EImportFlags>(flag));
+    }
+
+    private void FindAllFiles()
+    {
+        if (_data == null || _data.DepotPath == ResourcePath.Empty)
+        {
+            return;
+        }
+
+        var archiveManager = RedTypeHelper.GetArchiveManager();
+
+        if (archiveManager.ProjectArchive != null)
+        {
+            _projectFile = archiveManager.ProjectArchive.Files.FirstOrDefault(x => x.Key == _data.DepotPath).Value;
+        }
+
+        foreach (var archive in archiveManager.ModArchives.Items)
+        {
+            if (archive.Files.TryGetValue(_data.DepotPath, out var gameFile))
+            {
+                _modFiles.Add(gameFile);
+            }
+        }
+
+        foreach (var archive in archiveManager.Archives.Items)
+        {
+            if (archive.Files.TryGetValue(_data.DepotPath, out var gameFile))
+            {
+                _baseFiles.Add(gameFile);
+            }
+        }
+
+        _lookupDone = true;
     }
 }

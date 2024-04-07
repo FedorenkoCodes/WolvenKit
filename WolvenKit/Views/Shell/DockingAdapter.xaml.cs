@@ -208,7 +208,7 @@ namespace WolvenKit.Views.Shell
 
                     if (!newDockedWindows.Contains(contentControl.Name))
                     {
-                        appViewModel.DockedViews.Remove(dockElement);
+                        appViewModel.CloseFile(dockElement);
                         PART_DockingManager.Children.Remove(contentControl);
                     }
                 }
@@ -292,7 +292,7 @@ namespace WolvenKit.Views.Shell
 
             //vm.Close.Execute().Subscribe();
 
-            (ItemsSource as IList).Remove(vm);
+            _viewModel.CloseFile(vm);
             _viewModel.UpdateTitle();
 
             return true;
@@ -698,7 +698,7 @@ namespace WolvenKit.Views.Shell
             // actually remove and not hide FloatingPaneViewModels
             if (control is ContentControl { Content: FloatingPaneViewModel vm } && newstate == DockState.Hidden)
             {
-                _viewModel.DockedViews.Remove(vm);
+                _viewModel.CloseFile(vm);
                 return;
             }
 
